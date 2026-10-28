@@ -90,6 +90,26 @@ async def test_vendor_phone_constraint_rejects_non_ten_digit_values(tmp_path) ->
 
 
 @pytest.mark.asyncio
+async def test_vendor_address_and_phone_are_optional(tmp_path) -> None:
+    database_path = tmp_path / "shop.db"
+    await migrate(database_path)
+
+    async with connect(database_path) as connection:
+        await connection.execute(
+            "INSERT INTO vendors(id, name, created_at, updated_at) "
+            "VALUES ('v', 'Vendor', 'now', 'now')"
+        )
+        await connection.commit()
+
+    async with connect(database_path) as connection:
+        cursor = await connection.execute(
+            "SELECT address, phone FROM vendors WHERE id = 'v'"
+        )
+        row = await cursor.fetchone()
+    assert tuple(row) == (None, None)
+
+
+@pytest.mark.asyncio
 async def test_bill_insert_is_atomic_when_a_line_item_fails(tmp_path) -> None:
     database_path = tmp_path / "shop.db"
     await migrate(database_path)

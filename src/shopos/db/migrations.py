@@ -23,12 +23,12 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE TABLE IF NOT EXISTS vendors (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    address TEXT NOT NULL,
-    phone TEXT NOT NULL,
+    address TEXT,
+    phone TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     CONSTRAINT vendors_phone_digits CHECK (
-        length(phone) = 10 AND phone NOT GLOB '*[^0-9]*'
+        phone IS NULL OR (length(phone) = 10 AND phone NOT GLOB '*[^0-9]*')
     )
 );
 
@@ -103,9 +103,30 @@ CREATE INDEX IF NOT EXISTS idx_bill_drafts_expires_at ON bill_drafts(expires_at)
 CREATE INDEX IF NOT EXISTS idx_bill_drafts_state ON bill_drafts(state);
 """
 
+MIGRATION_3 = """
+PRAGMA foreign_keys = OFF;
+CREATE TABLE vendors_new (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT,
+    phone TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    CONSTRAINT vendors_phone_digits CHECK (
+        phone IS NULL OR (length(phone) = 10 AND phone NOT GLOB '*[^0-9]*')
+    )
+);
+INSERT INTO vendors_new(id, name, address, phone, created_at, updated_at)
+SELECT id, name, address, phone, created_at, updated_at FROM vendors;
+DROP TABLE vendors;
+ALTER TABLE vendors_new RENAME TO vendors;
+PRAGMA foreign_keys = ON;
+"""
+
 MIGRATIONS = {
     1: MIGRATION_1,
     2: MIGRATION_2,
+    3: MIGRATION_3,
 }
 
 

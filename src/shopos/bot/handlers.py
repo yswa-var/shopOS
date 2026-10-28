@@ -119,7 +119,11 @@ def create_router(
                 return
             try:
                 preview = confirmation_service.build_preview(draft)
-            except BillValidationError:
+            except BillValidationError as error:
+                await message.answer(
+                    "I have the details, but the preview still needs: "
+                    + ", ".join(error.fields)
+                )
                 return
             await message.answer(
                 preview.text(), reply_markup=confirmation_keyboard(preview.draft_id)

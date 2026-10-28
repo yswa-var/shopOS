@@ -22,6 +22,15 @@ Run the tests with:
 uv run pytest
 ```
 
+To test OpenRouter directly without Telegram:
+
+```sh
+uv run python scripts/test_openrouter.py --text "Haldi 200rs per kg from daddu lala"
+```
+
+Change the value passed to `--text` for another message. The script prints the
+typed extraction or the provider error.
+
 The package uses a `src/` layout. Drafts are stored in SQLite, survive service
 restarts, expire after `DRAFT_TTL_HOURS`, and are removed by `/cancel` or the
 startup cleanup step. Proof documents may use any file type, are size-limited,

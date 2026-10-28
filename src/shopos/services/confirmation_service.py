@@ -15,7 +15,7 @@ from zoneinfo import ZoneInfo
 from shopos.db.connection import connect
 from shopos.db.migrations import migrate
 
-from .bill_entry_service import BillEntryService
+from .bill_entry_service import BillEntryService, normalize_due_at
 from .draft_service import DraftRecord, DraftService
 from .proof_storage import ProofNotFoundError, ProofStorage
 
@@ -157,7 +157,10 @@ class ConfirmationService:
         total = sum(item.line_total_paise for item in items) + tax + charges
         if paid > total:
             raise BillValidationError(["Paid amount cannot exceed total"])
-        due_at = str(data.get("due_at", ""))
+        due_at = normalize_due_at(
+            str(data.get("due_at", "")),
+            self.entry.drafts._timezone,
+        )
         try:
             date.fromisoformat(due_at)
         except ValueError as error:
@@ -265,7 +268,14 @@ class ConfirmationService:
                         INSERT INTO vendors(id, name, address, phone, created_at, updated_at)
                         VALUES (?, ?, ?, ?, ?, ?)
                         """,
-                        (vendor_id, pending["name"], pending["address"], pending["phone"], now, now),
+                        (
+                            vendor_id,
+                            pending["name"],
+                            pending.get("address") or None,
+                            pending.get("phone") or None,
+                            now,
+                            now,
+                        ),
                     )
                 if not account_id:
                     pending = data["pending_account"]

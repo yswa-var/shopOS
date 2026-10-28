@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date, datetime, timedelta
+import re
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from shopos.llm.client import OpenRouterError
 from shopos.llm.schemas import BillExtraction, ItemChange
@@ -11,6 +14,28 @@ from shopos.llm.schemas import BillExtraction, ItemChange
 from .draft_service import DraftRecord, DraftService
 from .entity_resolver import EntityResolver, Resolution
 from .proof_storage import ProofStorage, StagedProof
+
+
+_RELATIVE_DUE_DATE = re.compile(r"^(?:in\s+)?(\d+)\s+days?$", re.IGNORECASE)
+
+
+def normalize_due_at(
+    value: str,
+    timezone: ZoneInfo,
+    *,
+    now: datetime | None = None,
+) -> str:
+    """Convert relative due dates to the ISO date required by SQLite."""
+
+    cleaned = value.strip()
+    try:
+        return date.fromisoformat(cleaned).isoformat()
+    except ValueError:
+        match = _RELATIVE_DUE_DATE.fullmatch(cleaned)
+        if match is None:
+            return cleaned
+        current = now.astimezone(timezone) if now else datetime.now(timezone)
+        return (current.date() + timedelta(days=int(match.group(1)))).isoformat()
 
 
 class BillEntryService:
@@ -57,7 +82,17 @@ class BillEntryService:
         for field in scalar_fields:
             value = getattr(extraction, field)
             if value is not None:
+                if field == "due_at":
+                    value = normalize_due_at(value, self.drafts._timezone)
                 updates[field] = value
+
+        if current.get("pending_vendor"):
+            pending_vendor = dict(current["pending_vendor"])
+            if extraction.vendor_address is not None:
+                pending_vendor["address"] = extraction.vendor_address
+            if extraction.vendor_phone is not None:
+                pending_vendor["phone"] = extraction.vendor_phone
+            updates["pending_vendor"] = pending_vendor
 
         if extraction.vendor_name:
             updates.update(await self._resolve_vendor(current, extraction.vendor_name, updates))
@@ -211,11 +246,6 @@ class BillEntryService:
                 return_missing_vendor = False
             else:
                 return_missing_vendor = True
-            pending_vendor = data.get("pending_vendor") or {}
-            if return_missing_vendor and not pending_vendor.get("address"):
-                missing.append("Vendor address")
-            if return_missing_vendor and not pending_vendor.get("phone"):
-                missing.append("Vendor phone")
             if return_missing_vendor and not data.get("vendor_name"):
                 missing.append("Vendor")
         if not data.get("account_id"):
