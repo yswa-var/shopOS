@@ -7,7 +7,8 @@ migrations, and persistent bill drafts.
 ### Run locally
 
 1. Copy `.env.example` to `.env`.
-2. Set `TELEGRAM_BOT_TOKEN` and `ALLOWED_TELEGRAM_USER_IDS`.
+2. Set `TELEGRAM_BOT_TOKEN`, `ALLOWED_TELEGRAM_USER_IDS`,
+   `OPENROUTER_API_KEY`, and `OPENROUTER_MODEL`.
 3. Install dependencies with `uv sync --dev`.
 4. Start polling with:
 
@@ -23,5 +24,5 @@ uv run pytest
 
 The package uses a `src/` layout. Drafts are stored in SQLite, survive service
 restarts, expire after `DRAFT_TTL_HOURS`, and are removed by `/cancel` or the
-startup cleanup step. Proof-file cleanup will be connected in the proof-storage
-quest.
+startup cleanup step. OpenRouter extraction uses strict JSON Schema responses,
+bounded retries, and never receives proof images or database instructions.

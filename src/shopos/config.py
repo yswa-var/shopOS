@@ -53,6 +53,15 @@ class Settings(BaseModel):
             raise ValueError("LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
         return level
 
+    def require_openrouter(self) -> tuple[str, str]:
+        """Return OpenRouter credentials or raise a clear configuration error."""
+
+        if not self.openrouter_api_key:
+            raise ValueError("OPENROUTER_API_KEY is required for extraction")
+        if not self.openrouter_model:
+            raise ValueError("OPENROUTER_MODEL is required for extraction")
+        return self.openrouter_api_key, self.openrouter_model
+
 
 def _parse_user_ids(raw_value: str | None) -> frozenset[int]:
     if raw_value is None or not raw_value.strip():
