@@ -1,13 +1,11 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.storage.base import StorageKey
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Chat, User
 
-from shopos.bot.handlers import BillEntry, create_router
+from shopos.bot.handlers import create_router
 from shopos.bot.middleware import AllowlistedUserMiddleware
+from shopos.services.draft_service import DraftService
 
 
 def _message(text: str):
@@ -19,8 +17,8 @@ def _message(text: str):
 
 
 @pytest.mark.asyncio
-async def test_start_explains_how_to_begin() -> None:
-    router = create_router()
+async def test_start_explains_how_to_begin(tmp_path) -> None:
+    router = create_router(DraftService(tmp_path / "shop.db"))
     message = _message("/start")
     handler = router.message.handlers[0].callback
 
@@ -31,31 +29,31 @@ async def test_start_explains_how_to_begin() -> None:
 
 
 @pytest.mark.asyncio
-async def test_upload_bill_sets_collecting_state() -> None:
-    router = create_router()
+async def test_upload_bill_creates_persistent_draft(tmp_path) -> None:
+    service = DraftService(tmp_path / "shop.db")
+    router = create_router(service)
     message = _message("/upload_bill")
-    storage = MemoryStorage()
-    state = FSMContext(storage, StorageKey(bot_id=1, chat_id=12, user_id=12))
     handler = router.message.handlers[1].callback
 
-    await handler(message, state)
+    await handler(message)
 
-    assert await state.get_state() == BillEntry.collecting.state
+    draft = await service.get(12)
+    assert draft is not None
+    assert draft.state == "COLLECTING"
     assert message.answer.await_count == 1
 
 
 @pytest.mark.asyncio
-async def test_cancel_clears_state() -> None:
-    router = create_router()
+async def test_cancel_deletes_persistent_draft(tmp_path) -> None:
+    service = DraftService(tmp_path / "shop.db")
+    await service.start_or_resume(12)
+    router = create_router(service)
     message = _message("/cancel")
-    storage = MemoryStorage()
-    state = FSMContext(storage, StorageKey(bot_id=1, chat_id=12, user_id=12))
-    await state.set_state(BillEntry.collecting)
-    handler = router.message.handlers[2].callback
+    handler = router.message.handlers[3].callback
 
-    await handler(message, state)
+    await handler(message)
 
-    assert await state.get_state() is None
+    assert await service.get(12) is None
     assert message.answer.await_count == 1
 
 

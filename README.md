@@ -1,8 +1,8 @@
 ## ShopOS
 
-ShopOS is a Telegram bot for collecting purchase bills. Quest 01 provides the
-validated configuration, allowlist, command router, and long-polling entry
-point.
+ShopOS is a Telegram bot for collecting purchase bills. The current quests
+provide validated configuration, allowlist enforcement, long polling, SQLite
+migrations, and persistent bill drafts.
 
 ### Run locally
 
@@ -21,5 +21,7 @@ Run the tests with:
 uv run pytest
 ```
 
-The package uses a `src/` layout. Quest 01 does not create a database or
-persist bill drafts; those behaviors belong to later quests.
+The package uses a `src/` layout. Drafts are stored in SQLite, survive service
+restarts, expire after `DRAFT_TTL_HOURS`, and are removed by `/cancel` or the
+startup cleanup step. Proof-file cleanup will be connected in the proof-storage
+quest.

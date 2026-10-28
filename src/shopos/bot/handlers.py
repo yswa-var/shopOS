@@ -1,21 +1,15 @@
-"""Quest 01 Telegram command handlers."""
+"""Telegram command handlers backed by persistent draft state."""
 
 from __future__ import annotations
 
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 
-
-class BillEntry(StatesGroup):
-    """Temporary in-memory state used until persistent drafts are implemented."""
-
-    collecting = State()
+from shopos.services.draft_service import DraftService
 
 
-def create_router() -> Router:
+def create_router(draft_service: DraftService) -> Router:
     router = Router(name="commands")
 
     @router.message(CommandStart())
@@ -27,17 +21,38 @@ def create_router() -> Router:
         )
 
     @router.message(Command("upload_bill"))
-    async def upload_bill(message: Message, state: FSMContext) -> None:
-        await state.set_state(BillEntry.collecting)
+    async def upload_bill(message: Message) -> None:
+        if message.from_user is None:
+            return
+        draft, resumed = await draft_service.start_or_resume(message.from_user.id)
+        action = "resumed" if resumed else "started"
         await message.answer(
-            "Bill entry started. Send the bill details as text, then attach the "
-            "JPEG or PNG proof image. Use /cancel to stop."
+            f"Bill entry {action}. Draft: {draft.draft_id}. Send the bill details "
+            "as text, then attach the JPEG or PNG proof image. Use /cancel to stop."
+        )
+
+    @router.message(Command("status"))
+    async def status(message: Message) -> None:
+        if message.from_user is None:
+            return
+        draft = await draft_service.get(message.from_user.id)
+        if draft is None:
+            await message.answer("You have no active bill draft.")
+            return
+        await message.answer(
+            f"Active draft: {draft.draft_id}\n"
+            f"State: {draft.state}\n"
+            f"Data: {draft.draft_data}"
         )
 
     @router.message(Command("cancel"))
-    async def cancel(message: Message, state: FSMContext) -> None:
-        await state.clear()
-        await message.answer("Bill entry cancelled.")
+    async def cancel(message: Message) -> None:
+        if message.from_user is None:
+            return
+        deleted = await draft_service.cancel(message.from_user.id)
+        await message.answer(
+            "Bill entry cancelled." if deleted else "You have no active bill draft."
+        )
 
     return router
 

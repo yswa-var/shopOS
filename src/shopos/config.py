@@ -24,6 +24,8 @@ class Settings(BaseModel):
     openrouter_model: str | None = None
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     business_timezone: str = "Asia/Kolkata"
+    database_path: Path = Path("data/shop.db")
+    draft_ttl_hours: int = Field(default=24, ge=1)
     max_image_mb: int = Field(default=10, ge=1)
     log_level: str = "INFO"
 
@@ -102,6 +104,8 @@ def load_settings(
             "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
         ),
         business_timezone=source.get("BUSINESS_TIMEZONE", "Asia/Kolkata"),
+        database_path=Path(source.get("DATABASE_PATH", "data/shop.db")),
+        draft_ttl_hours=int(source.get("DRAFT_TTL_HOURS", "24")),
         max_image_mb=int(source.get("MAX_IMAGE_MB", "10")),
         log_level=source.get("LOG_LEVEL", "INFO"),
     )
