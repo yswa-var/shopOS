@@ -285,13 +285,13 @@ data/
 
 Requirements:
 Proof image is mandatory before confirmation.
-Accept Telegram photos and JPEG/PNG image documents.
+Accept Telegram photos and documents of any file type as proof.
 Do not perform OCR, resize, compress or analyze images.
 Download using the Telegram Bot API.
-Validate actual file format, not only extension.
+Validate that the downloaded proof is non-empty and within the configured size limit.
 Maximum file size: configure to 10 MB
 Generate safe filenames; never trust a user-supplied path.
-Normalize storage extension to verified image type.
+Normalize storage extension to a safe extension or use `.bin` when unavailable.
 Save the image first under data/staging/.
 At confirmation, move it into data/parchi/YYYY-MM-DD/.
 Persist the relative final path in bills.proof.

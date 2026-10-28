@@ -92,9 +92,6 @@ def create_router(
         async def receive_image_document(message: Message, bot: Bot) -> None:
             if message.from_user is None or message.document is None:
                 return
-            if message.document.mime_type not in {"image/jpeg", "image/png"}:
-                await message.answer("Please send a JPEG or PNG image document.")
-                return
             try:
                 _, staged = await bill_entry_service.stage_proof(
                     message.from_user.id, bot, message.document.file_id

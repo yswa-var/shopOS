@@ -8,6 +8,7 @@ import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+import re
 from typing import Any
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
@@ -109,6 +110,19 @@ def detect_image_extension(content: bytes) -> str:
     raise InvalidImageError("only JPEG and PNG images are supported")
 
 
+def _safe_extension(original_filename: str | None, content: bytes) -> str:
+    """Keep only a harmless filename extension, with binary fallback."""
+
+    if original_filename:
+        suffix = Path(original_filename).suffix.lower().lstrip(".")
+        if re.fullmatch(r"[a-z0-9]{1,12}", suffix):
+            return suffix
+    try:
+        return detect_image_extension(content)
+    except InvalidImageError:
+        return "bin"
+
+
 class ProofStorage:
     """Manage draft staging and permanent proof paths under one data root."""
 
@@ -127,14 +141,14 @@ class ProofStorage:
         self.max_bytes = max_image_mb * 1024 * 1024
         self._timezone = ZoneInfo(business_timezone)
 
-    def _validate_content(self, content: bytes) -> str:
+    def _validate_content(self, content: bytes, original_filename: str | None) -> str:
         if len(content) > self.max_bytes:
             raise ImageTooLargeError(
                 f"image is {len(content)} bytes; maximum is {self.max_bytes} bytes"
             )
         if not content:
-            raise InvalidImageError("image is empty")
-        return detect_image_extension(content)
+            raise InvalidImageError("proof file is empty")
+        return _safe_extension(original_filename, content)
 
     def _staged_files(self, draft_id: str) -> list[Path]:
         return [
@@ -151,9 +165,8 @@ class ProofStorage:
     ) -> StagedProof:
         """Validate and atomically replace the draft's staged proof."""
 
-        del original_filename
         safe_id = _safe_draft_id(draft_id)
-        extension = self._validate_content(content)
+        extension = self._validate_content(content, original_filename)
         self.staging_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         target = self.staging_dir / f"{safe_id}.{extension}"
         temporary_path: Path | None = None
@@ -204,7 +217,11 @@ class ProofStorage:
             await bot.download_file(file_path, destination=content)
         except Exception as error:
             raise ProofStorageError("Telegram image download failed") from error
-        return self.stage_bytes(draft_id, content.getvalue())
+        return self.stage_bytes(
+            draft_id,
+            content.getvalue(),
+            original_filename=file_path,
+        )
 
     def remove_staged(self, draft_id: str) -> int:
         """Remove only temporary files for a draft; finalized files are untouched."""

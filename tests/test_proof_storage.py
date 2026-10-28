@@ -30,7 +30,7 @@ def test_stage_validates_content_and_ignores_filename(tmp_path) -> None:
     storage = ProofStorage(tmp_path / "data")
     draft_id = "12345678-1234-5678-1234-567812345678"
 
-    staged = storage.stage_bytes(draft_id, PNG, original_filename="../../evil.exe")
+    staged = storage.stage_bytes(draft_id, PNG, original_filename="../../evil")
 
     assert staged.extension == "png"
     assert staged.relative_path == f"staging/{draft_id}.png"
@@ -38,15 +38,25 @@ def test_stage_validates_content_and_ignores_filename(tmp_path) -> None:
     assert not (tmp_path / "data" / "evil.exe").exists()
 
 
-def test_invalid_and_oversized_images_are_rejected(tmp_path) -> None:
+def test_empty_and_oversized_proofs_are_rejected(tmp_path) -> None:
     storage = ProofStorage(tmp_path / "data", max_image_mb=1)
     draft_id = "12345678-1234-5678-1234-567812345678"
 
     with pytest.raises(InvalidImageError):
-        storage.stage_bytes(draft_id, b"not-an-image")
+        storage.stage_bytes(draft_id, b"")
     with pytest.raises(ImageTooLargeError):
         storage.stage_bytes(draft_id, b"x" * (1024 * 1024 + 1))
     assert not (tmp_path / "data" / "staging").exists()
+
+
+def test_any_file_type_is_saved_with_a_safe_extension(tmp_path) -> None:
+    storage = ProofStorage(tmp_path / "data")
+    draft_id = "12345678-1234-5678-1234-567812345678"
+
+    staged = storage.stage_bytes(draft_id, b"%PDF-proof", original_filename="../../proof.pdf")
+
+    assert staged.extension == "pdf"
+    assert (tmp_path / "data" / staged.relative_path).read_bytes() == b"%PDF-proof"
 
 
 def test_replacing_image_removes_old_staged_format(tmp_path) -> None:

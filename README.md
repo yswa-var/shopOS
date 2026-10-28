@@ -24,5 +24,7 @@ uv run pytest
 
 The package uses a `src/` layout. Drafts are stored in SQLite, survive service
 restarts, expire after `DRAFT_TTL_HOURS`, and are removed by `/cancel` or the
-startup cleanup step. OpenRouter extraction uses strict JSON Schema responses,
-bounded retries, and never receives proof images or database instructions.
+startup cleanup step. Proof documents may use any file type, are size-limited,
+and are stored under safe generated filenames. OpenRouter extraction uses
+strict JSON Schema responses, bounded retries, and never receives proof files
+or database instructions.
