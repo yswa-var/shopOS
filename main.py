@@ -10,6 +10,7 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 
+from db_ops.item_repository import ensure_database_schema
 from telegram_ops.handlers import router
 
 
@@ -25,6 +26,7 @@ async def main() -> None:
 
     bot = Bot(token=token)
     dispatcher = Dispatcher()
+    await asyncio.to_thread(ensure_database_schema, DATABASE_PATH)
     dispatcher["database_path"] = DATABASE_PATH
     dispatcher.include_router(router)
 

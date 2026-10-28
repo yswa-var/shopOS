@@ -32,3 +32,18 @@ def format_results(query: str, matches: Sequence[ItemMatch]) -> str:
             ]
         )
     return "\n".join(lines)
+
+
+def format_updated_sell(match: ItemMatch) -> str:
+    return "\n".join(
+        [
+            "Updated sell price",
+            "",
+            f"{match.item_id}. {match.item_name}",
+            f"Dar: {_price(match.purchase_unit_price, match.purchase_unit)}",
+            f"Lowest dar: {_price(match.lowest_purchase_price, match.lowest_price_unit)}",
+            f"Sell: {_price(match.sell_price, match.sell_unit)}",
+            f"Supplier: {match.supplier or 'Supplier unknown'}",
+            f"Purchased: {match.date_purchased or 'Purchase date unknown'}",
+        ]
+    )

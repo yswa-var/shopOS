@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 .env
+db_ops/shopos.sqlite3
