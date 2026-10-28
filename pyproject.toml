@@ -1,12 +1,22 @@
 [project]
 name = "shopos"
 version = "0.1.0"
-description = "Add your description here"
+description = "Telegram bill ingestion bot"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "aiogram>=3.31.0,<4.0.0",
-    "openpyxl>=3.1.5",
-    "pandas>=3.1.0",
+    "pydantic>=2.0.0,<3.0.0",
     "python-dotenv>=1.0.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

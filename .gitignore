@@ -10,3 +10,5 @@ wheels/
 .venv
 .env
 db_ops/shopos.sqlite3
+price_bot/db_ops/shopos.sqlite3
+data/user_actions/
