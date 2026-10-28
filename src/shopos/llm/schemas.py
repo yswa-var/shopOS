@@ -38,6 +38,8 @@ class BillExtraction(BaseModel):
 
     intent: Literal["update_draft", "clarify", "no_change"] = "update_draft"
     vendor_name: str | None = None
+    vendor_address: str | None = None
+    vendor_phone: str | None = None
     account_name: str | None = None
     firm_name: str | None = None
     invoice_number: str | None = None
@@ -50,6 +52,8 @@ class BillExtraction(BaseModel):
 
     @field_validator(
         "vendor_name",
+        "vendor_address",
+        "vendor_phone",
         "account_name",
         "firm_name",
         "invoice_number",

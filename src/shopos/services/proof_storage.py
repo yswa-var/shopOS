@@ -200,7 +200,10 @@ class ProofStorage:
             raise ProofStorageError("Telegram did not return a downloadable file path")
 
         content = io.BytesIO()
-        await bot.download_file(file_path, destination=content)
+        try:
+            await bot.download_file(file_path, destination=content)
+        except Exception as error:
+            raise ProofStorageError("Telegram image download failed") from error
         return self.stage_bytes(draft_id, content.getvalue())
 
     def remove_staged(self, draft_id: str) -> int:

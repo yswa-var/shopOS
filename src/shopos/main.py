@@ -19,6 +19,11 @@ from shopos.bot.middleware import AllowlistedUserMiddleware
 from shopos.config import Settings, load_settings
 from shopos.db.migrations import migrate
 from shopos.services.draft_service import DraftService
+from shopos.services.bill_entry_service import BillEntryService
+from shopos.services.entity_resolver import EntityResolver
+from shopos.services.proof_storage import ProofStorage
+from shopos.llm.client import OpenRouterClient
+from shopos.llm.extractor import BillExtractor
 
 
 def create_dispatcher(settings: Settings) -> Dispatcher:
@@ -30,7 +35,26 @@ def create_dispatcher(settings: Settings) -> Dispatcher:
         business_timezone=settings.business_timezone,
         ttl=timedelta(hours=settings.draft_ttl_hours),
     )
-    router = create_router(draft_service)
+    extractor = None
+    if settings.openrouter_api_key and settings.openrouter_model:
+        extractor = BillExtractor(
+            OpenRouterClient(
+                api_key=settings.openrouter_api_key,
+                model=settings.openrouter_model,
+                base_url=settings.openrouter_base_url,
+            )
+        )
+    bill_entry_service = BillEntryService(
+        draft_service,
+        resolver=EntityResolver(settings.database_path),
+        extractor=extractor,
+        proof_storage=ProofStorage(
+            settings.database_path.parent,
+            max_image_mb=settings.max_image_mb,
+            business_timezone=settings.business_timezone,
+        ),
+    )
+    router = create_router(draft_service, bill_entry_service)
     router.message.middleware(AllowlistedUserMiddleware(settings.allowed_telegram_user_ids))
     dispatcher.include_router(router)
     return dispatcher
