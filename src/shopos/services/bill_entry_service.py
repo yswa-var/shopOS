@@ -237,8 +237,6 @@ class BillEntryService:
                 elif item.get("pending_item"):
                     if not item.get("unit") or not item.get("unit_price"):
                         missing.append(f"Item details for {item.get('name', 'item')}")
-                    else:
-                        missing.append(f"Confirm new item {item.get('name', 'item')}")
         if not data.get("due_at"):
             missing.append("Due date")
         if not data.get("proof"):
@@ -249,5 +247,5 @@ class BillEntryService:
         missing = self.missing_fields(draft)
         if missing:
             return f"Draft updated. Missing: {', '.join(missing)}."
-        return "All required bill information is present. Review and confirm in the next quest."
+        return "All required bill information is present. Review the preview and use Confirm & Save."
 

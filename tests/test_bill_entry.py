@@ -90,5 +90,6 @@ async def test_unknown_vendor_and_item_are_kept_as_provisional_draft_data(tmp_pa
     assert draft.draft_data["vendor_id"] is None
     assert draft.draft_data["pending_vendor"]["name"] == "New Vendor"
     assert draft.draft_data["items"][0]["pending_item"]["name"] == "Jeera"
-    assert "Confirm new item Jeera" in BillEntryService.missing_fields(draft)
+    assert "Due date" in BillEntryService.missing_fields(draft)
+    assert "Proof image" in BillEntryService.missing_fields(draft)
 

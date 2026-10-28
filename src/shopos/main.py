@@ -22,6 +22,7 @@ from shopos.services.draft_service import DraftService
 from shopos.services.bill_entry_service import BillEntryService
 from shopos.services.entity_resolver import EntityResolver
 from shopos.services.proof_storage import ProofStorage
+from shopos.services.confirmation_service import ConfirmationService
 from shopos.llm.client import OpenRouterClient
 from shopos.llm.extractor import BillExtractor
 
@@ -54,7 +55,13 @@ def create_dispatcher(settings: Settings) -> Dispatcher:
             business_timezone=settings.business_timezone,
         ),
     )
-    router = create_router(draft_service, bill_entry_service)
+    confirmation_service = ConfirmationService(
+        draft_service,
+        entry_service=bill_entry_service,
+        proof_storage=bill_entry_service.proof_storage,
+        business_timezone=settings.business_timezone,
+    )
+    router = create_router(draft_service, bill_entry_service, confirmation_service)
     router.message.middleware(AllowlistedUserMiddleware(settings.allowed_telegram_user_ids))
     dispatcher.include_router(router)
     return dispatcher

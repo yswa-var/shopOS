@@ -151,10 +151,13 @@ class ProofStorage:
         return _safe_extension(original_filename, content)
 
     def _staged_files(self, draft_id: str) -> list[Path]:
-        return [
-            self.staging_dir / f"{draft_id}.jpg",
-            self.staging_dir / f"{draft_id}.png",
-        ]
+        if not self.staging_dir.is_dir():
+            return []
+        return sorted(
+            path
+            for path in self.staging_dir.glob(f"{draft_id}.*")
+            if path.is_file() and not path.name.startswith(f".{draft_id}.")
+        )
 
     def stage_bytes(
         self,
@@ -254,4 +257,29 @@ class ProofStorage:
         os.replace(staged, target)
         os.chmod(target, 0o600)
         return Path("parchi", date_dir.name, target.name).as_posix()
+
+    def restore_final(self, relative_path: str, draft_id: str) -> StagedProof | None:
+        """Move a just-finalized proof back to staging after a failed commit."""
+
+        safe_id = _safe_draft_id(draft_id)
+        relative = Path(relative_path)
+        if relative.is_absolute() or ".." in relative.parts or relative.parts[:1] != ("parchi",):
+            raise ProofStorageError("invalid finalized proof path")
+        source = self.data_dir / relative
+        if not source.is_file():
+            return None
+        extension = source.suffix.lower().lstrip(".") or "bin"
+        self.staging_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        target = self.staging_dir / f"{safe_id}.{extension}"
+        os.replace(source, target)
+        os.chmod(target, 0o600)
+        for old_path in self._staged_files(safe_id):
+            if old_path != target:
+                old_path.unlink(missing_ok=True)
+        return StagedProof(
+            draft_id=safe_id,
+            extension=extension,
+            size_bytes=target.stat().st_size,
+            relative_path=Path("staging", target.name).as_posix(),
+        )
 
