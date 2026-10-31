@@ -13,6 +13,13 @@ dependencies = [
     "httpx>=0.28.1",
 ]
 
+[project.scripts]
+shopos = "shopos.main:main"
+
+[build-system]
+requires = ["uv_build>=0.11.0,<0.12.0"]
+build-backend = "uv_build"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
@@ -21,5 +28,11 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.uv.workspace]
+members = [
+    "app_server",
+]

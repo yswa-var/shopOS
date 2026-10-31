@@ -14,3 +14,4 @@ price_bot/db_ops/shopos.sqlite3
 data/user_actions/
 pricebot/db_ops/shopos.sqlite3
 data/
+pricebot/items.csv
