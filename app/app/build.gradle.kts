@@ -1,7 +1,23 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+}
+
+val localSettings = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.isFile) file.inputStream().use { load(it) }
+}
+val apiBaseUrl = (System.getenv("SHOPOS_API_BASE_URL")
+    ?: localSettings.getProperty("SHOPOS_API_BASE_URL"))?.trim()
+    ?: error("Set SHOPOS_API_BASE_URL in app/local.properties or the build environment")
+require(apiBaseUrl.startsWith("https://") || apiBaseUrl.startsWith("http://")) {
+    "SHOPOS_API_BASE_URL must be an HTTP(S) URL"
+}
+require(apiBaseUrl.endsWith("/")) {
+    "SHOPOS_API_BASE_URL must end with /"
 }
 
 android {
@@ -18,6 +34,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "API_BASE_URL", "\"${apiBaseUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
     }
 
     buildTypes {
@@ -34,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
