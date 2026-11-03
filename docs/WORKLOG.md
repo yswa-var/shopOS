@@ -19,5 +19,5 @@
 - Acceptance: login returns an opaque bearer token, logout revokes it, expired tokens and deactivated users are rejected, unauthenticated API calls return 401, and an employee is denied owner-only audit access even with an audit grant. Audit records cover bootstrap, login, and logout.
 - Verification (2026-11-04): `DATABASE_URL=... UV_CACHE_DIR=... uv run alembic upgrade head` and `alembic current` — `0002 (head)`; `alembic check` — no new upgrade operations; `DATABASE_URL=... UV_CACHE_DIR=... uv run pytest` — 5 passed; `UV_CACHE_DIR=... uv run python -m shopos.bootstrap --help` — exit 0; `JAVA_HOME=... ANDROID_HOME=... ./gradlew :app:assembleDebug` — BUILD SUCCESSFUL.
 - Checks used disposable PostgreSQL 16 because the Docker daemon was stopped. No hosted CI or Render deploy was run. Android login was build-checked; interactive emulator sign-in was not run.
-- Commit: Q01 checkpoint; hash to be recorded after commit.
+- Commit: `03caf41` (Q01 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q02 catalog search/create API and Android selector flow. Employee creation and permission editing remain assigned to Q07; authentication rate limiting is a hardening follow-up for Q08.

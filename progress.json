@@ -13,7 +13,7 @@
     "Q07": "pending",
     "Q08": "pending"
   },
-  "last_verified_commit": "c659eb1",
+  "last_verified_commit": "03caf41",
   "next_quest": "Q02",
   "blockers": [],
   "last_update": "Q01 verified: 5 backend tests passed against disposable PostgreSQL; migration 0002 is head and matches models; Android assembleDebug succeeded. Next: Q02 vendor/item catalog and selector flow."
