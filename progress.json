@@ -1,0 +1,20 @@
+{
+  "project": "ShopOS",
+  "schema_version": 1,
+  "status": "starter",
+  "quests": {
+    "Q00": "pending",
+    "Q01": "pending",
+    "Q02": "pending",
+    "Q03": "pending",
+    "Q04": "pending",
+    "Q05": "pending",
+    "Q06": "pending",
+    "Q07": "pending",
+    "Q08": "pending"
+  },
+  "last_verified_commit": null,
+  "next_quest": "Q00",
+  "blockers": [],
+  "last_update": "Starter created; no implementation quest has been completed."
+}
