@@ -11,5 +11,5 @@
 - Acceptance: backend health responds; database readiness responds after migration; Android debug APK builds. Local and Render database URLs share the same configuration path.
 - Verification (2026-11-04): `UV_CACHE_DIR=/private/tmp/shopos-uv-cache uv run pytest` — 2 passed; `DATABASE_URL=... uv run alembic upgrade head` and `alembic current` — `0001 (head)` on disposable PostgreSQL 16; `curl -fsS http://127.0.0.1:18000/health http://127.0.0.1:18000/ready` — `{"status":"ok"}{"status":"ready"}`; `JAVA_HOME=... ANDROID_HOME=... ./gradlew :app:assembleDebug` — BUILD SUCCESSFUL, APK at `android/app/build/outputs/apk/debug/app-debug.apk`; `git diff --check` — clean.
 - Docker Compose was not run because the local Docker daemon was stopped. PostgreSQL was instead run from a disposable local cluster. CI workflow and Render Blueprint were reviewed but not executed on hosted services.
-- Commit: Q00 checkpoint; see Git history and `progress.json`.
+- Commit: `c659eb1` (Q00 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q01 employee authentication, owner bootstrap, RBAC, and audit foundation.
