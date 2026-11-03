@@ -3,6 +3,7 @@ from sqlalchemy import engine_from_config, pool
 
 from shopos.config import database_url
 from shopos.db import Base
+import shopos.models  # Register tables for migration metadata.
 
 config = context.config
 config.set_main_option("sqlalchemy.url", database_url().replace("%", "%%"))

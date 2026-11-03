@@ -4,7 +4,7 @@
   "status": "in_progress",
   "quests": {
     "Q00": "complete",
-    "Q01": "pending",
+    "Q01": "complete",
     "Q02": "pending",
     "Q03": "pending",
     "Q04": "pending",
@@ -14,7 +14,7 @@
     "Q08": "pending"
   },
   "last_verified_commit": "c659eb1",
-  "next_quest": "Q01",
+  "next_quest": "Q02",
   "blockers": [],
-  "last_update": "Q00 verified: backend tests 2 passed; baseline migration at 0001 on disposable PostgreSQL; HTTP /health and /ready returned 200; Android assembleDebug succeeded. Next: Q01 authentication, owner bootstrap, RBAC, and audit."
+  "last_update": "Q01 verified: 5 backend tests passed against disposable PostgreSQL; migration 0002 is head and matches models; Android assembleDebug succeeded. Next: Q02 vendor/item catalog and selector flow."
 }
