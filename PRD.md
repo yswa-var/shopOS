@@ -22,6 +22,7 @@ Let a shop employee record a supplier purchase with proof quickly, then find tha
   - changing quantity preserves the last entered pricing basis.
 - Tax and charges are optional and separate from line amounts. Show the final payable total clearly.
 - Reject non-positive quantity and invalid/negative money. Use decimal-safe calculations and defined rounding.
+- V1 precision: quantity has up to 3 decimal places, unit rate up to 4, and monetary amounts 2. Derived values round half up. An amount-entered line keeps that exact amount even if its displayed derived rate is approximate.
 - Support multiple items per bill from the start.
 - Proof photo is mandatory before final save. Upload privately; show Draft / Uploading / Saved states and allow safe retry.
 - Prevent duplicate bills when a save is retried (client idempotency key + server uniqueness strategy).

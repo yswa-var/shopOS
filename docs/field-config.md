@@ -25,23 +25,23 @@ data class BillFieldSpec(
 object BillFormFields {
     // Add or change bill-entry fields here first, then follow the checklist below.
     val header = listOf(
-        BillFieldSpec("vendor_id", "Vendor", BillInputKind.TEXT, required = true),
-        BillFieldSpec("bill_date", "Bill date", BillInputKind.DATE, required = true),
-        BillFieldSpec("tax_amount", "Tax (₹)", BillInputKind.MONEY, required = false),
-        BillFieldSpec("charges_amount", "Extra charges (₹)", BillInputKind.MONEY, required = false),
-        BillFieldSpec("proof_photo", "Proof photo", BillInputKind.PHOTO, required = true),
+        BillFieldSpec("vendor_id", "Vendor", BillInputKind.TEXT, required = true, visible = true),
+        BillFieldSpec("bill_date", "Bill date", BillInputKind.DATE, required = true, visible = true),
+        BillFieldSpec("tax_amount", "Tax (₹)", BillInputKind.MONEY, required = false, visible = true),
+        BillFieldSpec("charges_amount", "Extra charges (₹)", BillInputKind.MONEY, required = false, visible = true),
+        BillFieldSpec("proof_photo", "Proof photo", BillInputKind.PHOTO, required = true, visible = true),
     )
 
     val lineItem = listOf(
-        BillFieldSpec("item_id", "Item", BillInputKind.TEXT, required = true),
-        BillFieldSpec("quantity", "Quantity", BillInputKind.DECIMAL, required = true),
-        BillFieldSpec("unit_rate", "Rate per kg (₹)", BillInputKind.MONEY, required = false),
-        BillFieldSpec("line_amount", "Amount (₹)", BillInputKind.MONEY, required = false),
+        BillFieldSpec("item_id", "Item", BillInputKind.TEXT, required = true, visible = true),
+        BillFieldSpec("quantity", "Quantity", BillInputKind.DECIMAL, required = true, visible = true),
+        BillFieldSpec("unit_rate", "Unit rate (₹)", BillInputKind.MONEY, required = false, visible = true),
+        BillFieldSpec("line_amount", "Amount (₹)", BillInputKind.MONEY, required = false, visible = true),
     )
 }
 ```
 
-This is a pattern for Codex to implement, not a compiled app yet. Q00 creates the Android project and package structure.
+The compiled field registry follows this pattern. Q03's decimal rules are in `docs/bill-domain.md`.
 
 ## Change checklist
 

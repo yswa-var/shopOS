@@ -6,7 +6,7 @@
     "Q00": "complete",
     "Q01": "complete",
     "Q02": "complete",
-    "Q03": "pending",
+    "Q03": "complete",
     "Q04": "pending",
     "Q05": "pending",
     "Q06": "pending",
@@ -14,7 +14,7 @@
     "Q08": "pending"
   },
   "last_verified_commit": "9f72a0c",
-  "next_quest": "Q03",
+  "next_quest": "Q04",
   "blockers": [],
-  "last_update": "Q02 verified: 8 backend tests passed on fresh disposable PostgreSQL; migration 0003 is head and matches models; Android assembleDebug succeeded. Next: Q03 bill calculation and validation."
+  "last_update": "Q03 verified: 27 backend tests and 4 Kotlin unit tests passed; Android debug build succeeded; fresh PostgreSQL migration 0004 is head and matches models. Next: Q04 private proof-photo attachment."
 }

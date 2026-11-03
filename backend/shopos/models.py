@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -98,3 +99,44 @@ class CatalogTerm(Base):
     item_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("items.id"), index=True)
     vendor: Mapped[Vendor | None] = relationship(back_populates="terms", foreign_keys=[vendor_id])
     item: Mapped[Item | None] = relationship(back_populates="terms", foreign_keys=[item_id])
+
+
+class Bill(Base):
+    __tablename__ = "bills"
+    __table_args__ = (
+        UniqueConstraint("created_by", "idempotency_key", name="uq_bills_creator_idempotency"),
+        CheckConstraint("tax_amount >= 0 AND charges_amount >= 0 AND subtotal >= 0 AND total_amount >= 0", name="nonnegative_bill_money"),
+        CheckConstraint("total_amount = subtotal + tax_amount + charges_amount", name="bill_total_matches_parts"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    vendor_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False, index=True)
+    bill_date: Mapped[date] = mapped_column(Date, nullable=False)
+    proof_attachment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    idempotency_key: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    tax_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0.00")
+    charges_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0.00")
+    subtotal: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    total_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    created_by: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    lines: Mapped[list["BillLine"]] = relationship(back_populates="bill", order_by="BillLine.position")
+
+
+class BillLine(Base):
+    __tablename__ = "bill_lines"
+    __table_args__ = (
+        UniqueConstraint("bill_id", "position", name="uq_bill_line_position"),
+        CheckConstraint("position >= 0 AND quantity > 0 AND unit_rate >= 0 AND line_amount >= 0", name="valid_bill_line_values"),
+        CheckConstraint("price_basis IN ('rate', 'amount')", name="valid_bill_price_basis"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    bill_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("bills.id"), nullable=False, index=True)
+    item_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("items.id"), nullable=False, index=True)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    quantity: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False)
+    price_basis: Mapped[str] = mapped_column(String(16), nullable=False)
+    unit_rate: Mapped[Decimal] = mapped_column(Numeric(16, 4), nullable=False)
+    line_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    bill: Mapped[Bill] = relationship(back_populates="lines")

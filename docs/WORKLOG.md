@@ -29,3 +29,11 @@
 - PostgreSQL was run from a disposable local cluster because Docker was stopped. No emulator was connected, so Android picker interactions were not run on-device; the Compose code and API integration were build/test verified.
 - Commit: `9f72a0c` (Q02 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q03 decimal-safe bill calculation and validation. Q05 will connect selected vendor/item IDs to bill drafts and increment catalog usage on saved bills.
+
+## Q03 — Bill domain and decimal rules
+- Scope: Python and Kotlin bill arithmetic with explicit latest-edited price basis; Pydantic bill creation validation; bill and line SQLAlchemy models plus migration 0004; central field labels and visibility; bill contract documentation; standard check command and CI run Kotlin unit tests.
+- Acceptance: quantity/rate/amount edits preserve the latest entered basis; half-up rounding, multiple lines, optional tax/charges, missing proof, invalid quantity, excess precision, negative money, and binary floats are covered by unit tests. The backend owns final validation and stores source basis with both calculated values.
+- Verification (2026-11-04): `DATABASE_URL=... UV_CACHE_DIR=... uv run alembic upgrade head` on a fresh disposable PostgreSQL database — success; `alembic current` — `0004 (head)`; `alembic check` — no new upgrade operations; `DATABASE_URL=... UV_CACHE_DIR=... JAVA_HOME=... ANDROID_HOME=... make check` — 27 backend tests passed, 4 Kotlin unit tests passed, Android `assembleDebug` BUILD SUCCESSFUL; `git diff --check` — clean.
+- PostgreSQL was run from a disposable local cluster because Docker was stopped. No emulator was connected. Q04 must create attachment metadata and add a foreign key for `bills.proof_attachment_id`; Q05 must implement the save transaction and idempotent response.
+- Commit: Q03 checkpoint; hash to be recorded after commit.
+- Next: Q04 private proof-photo upload and attachment metadata.

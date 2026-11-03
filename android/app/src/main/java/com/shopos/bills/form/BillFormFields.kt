@@ -31,17 +31,18 @@ data class BillFieldSpec(
  */
 object BillFormFields {
     val header: List<BillFieldSpec> = listOf(
-        BillFieldSpec("vendor_id", "Vendor", BillInputKind.TEXT, required = true),
-        BillFieldSpec("bill_date", "Bill date", BillInputKind.DATE, required = true),
-        BillFieldSpec("tax_amount", "Tax (₹)", BillInputKind.MONEY, required = false),
-        BillFieldSpec("charges_amount", "Extra charges (₹)", BillInputKind.MONEY, required = false),
-        BillFieldSpec("proof_photo", "Proof photo", BillInputKind.PHOTO, required = true),
+        BillFieldSpec("vendor_id", "Vendor", BillInputKind.TEXT, required = true, visible = true),
+        BillFieldSpec("bill_date", "Bill date", BillInputKind.DATE, required = true, visible = true),
+        BillFieldSpec("tax_amount", "Tax (₹)", BillInputKind.MONEY, required = false, visible = true),
+        BillFieldSpec("charges_amount", "Extra charges (₹)", BillInputKind.MONEY, required = false, visible = true),
+        BillFieldSpec("proof_photo", "Proof photo", BillInputKind.PHOTO, required = true, visible = true),
     )
 
     val lineItem: List<BillFieldSpec> = listOf(
-        BillFieldSpec("item_id", "Item", BillInputKind.TEXT, required = true),
-        BillFieldSpec("quantity", "Quantity", BillInputKind.DECIMAL, required = true),
-        BillFieldSpec("unit_rate", "Rate per kg (₹)", BillInputKind.MONEY, required = false),
-        BillFieldSpec("line_amount", "Amount (₹)", BillInputKind.MONEY, required = false),
+        BillFieldSpec("item_id", "Item", BillInputKind.TEXT, required = true, visible = true),
+        BillFieldSpec("quantity", "Quantity", BillInputKind.DECIMAL, required = true, visible = true),
+        // Either rate or amount is entered; the latest edit becomes the calculation basis.
+        BillFieldSpec("unit_rate", "Unit rate (₹)", BillInputKind.MONEY, required = false, visible = true),
+        BillFieldSpec("line_amount", "Amount (₹)", BillInputKind.MONEY, required = false, visible = true),
     )
 }

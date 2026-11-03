@@ -27,6 +27,7 @@ PostgreSQL (authoritative shared records)
 - Passwords use salted PBKDF2 hashes. Opaque bearer tokens are stored only as SHA-256 hashes, expire after 12 hours, and are revoked on logout. Every protected request reloads active user and permission state from PostgreSQL.
 - Owner bootstrap is a one-time CLI action after migration. It takes a transaction advisory lock and refuses to create another owner once any user exists.
 - Vendor and item records have separate tables. Shared catalog terms enforce unique canonical names and aliases within each catalog. The Android picker may filter cached results instantly, but only the server can create or resolve a term.
+- Bill arithmetic lives in Python and Kotlin domain code. The backend validates source price inputs and recomputes totals; each stored line retains whether rate or amount was entered. See `docs/bill-domain.md`.
 - Database migrations are additive and reviewed; saved records are not silently reshaped.
 - Photos are private objects. The database stores object keys and metadata, never long-lived public links.
 

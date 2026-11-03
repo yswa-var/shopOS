@@ -19,4 +19,4 @@ test:
 	uv run pytest
 
 check: test
-	cd android && ./gradlew :app:assembleDebug
+	cd android && ./gradlew :app:testDebugUnitTest :app:assembleDebug

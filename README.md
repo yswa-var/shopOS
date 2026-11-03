@@ -1,6 +1,6 @@
 # ShopOS
 
-ShopOS is an Android and FastAPI project for fast purchase bill entry. Q00 provides the API and build shell; Q01 adds account sign-in; Q02 adds searchable vendor and item catalogs with inline creation. Bill entry and search follow in later quests; see `QUESTS.md` and `progress.json`.
+ShopOS is an Android and FastAPI project for fast purchase bill entry. Q00 provides the API and build shell; Q01 adds account sign-in; Q02 adds vendor and item catalogs; Q03 defines decimal-safe bill calculations and storage models. Bill save and search follow in later quests; see `QUESTS.md` and `progress.json`.
 
 ## Local backend
 
@@ -21,6 +21,8 @@ The bootstrap command prompts for a password and only succeeds when no users exi
 `POST /auth/login` accepts `{"username":"...","password":"..."}` and returns a bearer token and user profile. Send the token in `Authorization: Bearer <token>`. `GET /auth/me` checks it; `POST /auth/logout` revokes it. Tokens expire after 12 hours, and a deactivated account loses access immediately. The owner-only `GET /audit/events` route is the first protected audit operation. Employee creation and permission editing arrive in Q07.
 
 Catalog search and inline creation are described in [docs/catalog-api.md](docs/catalog-api.md). The first owner can use them immediately. Employees need `catalog:read` and `catalog:write` grants, which the owner will manage in Q07.
+
+Bill pricing and validation rules are in [docs/bill-domain.md](docs/bill-domain.md). Q03 defines the model and request schema; Q05 adds the save endpoint after proof-photo attachment work.
 
 Run `make test` for backend tests. The baseline migration is intentionally empty; later quests add tables through Alembic.
 
