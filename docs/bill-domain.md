@@ -14,8 +14,10 @@ Derived values use `ROUND_HALF_UP`. A rate-entered line calculates `line_amount 
 
 `subtotal` is the sum of rounded line amounts. `total_amount = subtotal + tax_amount + charges_amount`; omitted tax or charges mean zero. Negative money, non-positive quantity, excess decimal places, non-finite values, and totals beyond the database precision are rejected. Zero-valued lines remain valid for no-charge purchases. The request sends decimal values as strings, never JSON floating-point numbers.
 
-## Creation schema for Q05
+## Creation schema and save flow
 
 `BillCreateInput` requires `vendor_id`, `bill_date`, `proof_attachment_id`, `idempotency_key`, and a nonempty `items` array. Each line requires `item_id`, `quantity`, and `price_basis` (`rate` or `amount`). A rate-based line sends only `unit_rate`; an amount-based line sends only `line_amount`. The backend computes the other price and all totals. Android uses `BigDecimal`; the backend uses `Decimal`. Store the basis with each line so a later correction retains the employee's original pricing choice.
 
-The bill tables already reserve a unique `(created_by, idempotency_key)` pair to prevent duplicate saves. Q05 must enforce this in its transaction and return the same bill for a retry.
+`POST /bills` requires `bills:create`. It validates the vendor and items, then locks the ready proof and checks that the creator uploaded it. A proof can belong to one bill only. The transaction writes the bill, ordered lines, catalog usage, and one audit event. A retry with the same creator, key, and payload returns the existing bill; a changed payload using that key returns 409. The nullable request fingerprint column is an additive migration for older development databases.
+
+The Android form stores one Room draft per employee, including raw field text, selected IDs, a private photo path, stable upload ID, and stable bill idempotency key. It uploads the CameraX JPEG through a short-lived signed URL, completes the proof, then sends the bill. Once the bill request is sent, the draft is frozen so a timeout can be retried with the same payload. A successful response deletes the draft and its local photo. The debug APK allows cleartext traffic for local emulator endpoints; release builds require HTTPS. Q06 adds query/detail screens for saved bills.

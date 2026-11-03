@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.shopos.bills.catalog.CatalogRepository
 import com.shopos.bills.catalog.catalogRepository
+import com.shopos.bills.data.BillRepository
+import com.shopos.bills.data.billRepository
 
 data class AuthUiState(
     val user: UserResponse? = null,
@@ -22,6 +24,7 @@ class AuthViewModel : ViewModel() {
     private var token: String? = null
 
     fun catalogRepository(): CatalogRepository = catalogRepository { token }
+    fun billRepository(): BillRepository = billRepository { token }
 
     fun login(username: String, password: String) {
         if (mutableState.value.loading) return

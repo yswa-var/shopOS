@@ -8,13 +8,13 @@
     "Q02": "complete",
     "Q03": "complete",
     "Q04": "complete",
-    "Q05": "pending",
+    "Q05": "complete",
     "Q06": "pending",
     "Q07": "pending",
     "Q08": "pending"
   },
   "last_verified_commit": "90dd6a3",
-  "next_quest": "Q05",
+  "next_quest": "Q06",
   "blockers": [],
-  "last_update": "Q04 verified: 31 backend tests passed with one optional live test skipped in the standard check; 4 Kotlin tests and Android build passed; a separate live signed upload/download test passed against private local S3; migration 0005 matches models. Next: Q05 bill ingest, draft recovery, and idempotent save."
+  "last_update": "Q05 verified: 34 backend tests passed with one optional live storage test skipped, 5 Kotlin tests passed, Android debug build passed, and migration 0006 matches models. No Android device was attached for interactive CameraX or Room checks. Next: Q06 bill query and detail."
 }

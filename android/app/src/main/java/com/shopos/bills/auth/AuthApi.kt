@@ -13,6 +13,8 @@ data class TokenResponse(val access_token: String, val user: UserResponse)
 data class UserResponse(val id: String, val username: String, val display_name: String, val role: String, val permissions: List<String>) {
     fun canReadCatalog(): Boolean = role == "owner" || "catalog:read" in permissions
     fun canWriteCatalog(): Boolean = role == "owner" || "catalog:write" in permissions
+    fun canCreateBill(): Boolean = role == "owner" || "bills:create" in permissions
+    fun canWriteProof(): Boolean = role == "owner" || "attachments:write" in permissions
 }
 
 interface AuthApi {

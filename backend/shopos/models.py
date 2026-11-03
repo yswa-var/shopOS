@@ -105,6 +105,7 @@ class Bill(Base):
     __tablename__ = "bills"
     __table_args__ = (
         UniqueConstraint("created_by", "idempotency_key", name="uq_bills_creator_idempotency"),
+        UniqueConstraint("proof_attachment_id", name="uq_bills_proof_attachment"),
         CheckConstraint("tax_amount >= 0 AND charges_amount >= 0 AND subtotal >= 0 AND total_amount >= 0", name="nonnegative_bill_money"),
         CheckConstraint("total_amount = subtotal + tax_amount + charges_amount", name="bill_total_matches_parts"),
     )
@@ -114,6 +115,7 @@ class Bill(Base):
     bill_date: Mapped[date] = mapped_column(Date, nullable=False)
     proof_attachment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("proof_attachments.id"), nullable=False, index=True)
     idempotency_key: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    request_hash: Mapped[str | None] = mapped_column(String(64))
     tax_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0.00")
     charges_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0.00")
     subtotal: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)

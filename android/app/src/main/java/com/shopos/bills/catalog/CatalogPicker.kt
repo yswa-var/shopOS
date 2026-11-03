@@ -30,6 +30,7 @@ fun CatalogPicker(
     kind: CatalogKind,
     repository: CatalogRepository,
     canCreate: Boolean,
+    selected: CatalogEntry? = null,
     onSelected: (CatalogEntry) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -38,6 +39,7 @@ fun CatalogPicker(
     var showCreate by remember { mutableStateOf(false) }
     var showAlias by remember { mutableStateOf(false) }
     LaunchedEffect(picker) { picker.search("") }
+    LaunchedEffect(picker, selected?.id) { if (selected != null) picker.select(selected) }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         Text(label, style = MaterialTheme.typography.titleMedium)

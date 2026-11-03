@@ -7,6 +7,7 @@ from shopos.auth import router as auth_router, Db, require_owner
 from shopos.models import AuditEvent
 from shopos.catalog import router as catalog_router
 from shopos.attachments import router as attachments_router
+from shopos.bills.api import router as bills_router
 from sqlalchemy import select
 
 
@@ -14,6 +15,7 @@ app = FastAPI(title="ShopOS API", version="0.1.0")
 app.include_router(auth_router)
 app.include_router(catalog_router)
 app.include_router(attachments_router)
+app.include_router(bills_router)
 
 
 @app.get("/health")

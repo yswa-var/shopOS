@@ -22,6 +22,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -29,10 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shopos.bills.auth.AuthUiState
 import com.shopos.bills.auth.AuthViewModel
-import com.shopos.bills.catalog.CatalogKind
-import com.shopos.bills.catalog.CatalogPicker
-import com.shopos.bills.catalog.CatalogEntry
-import com.shopos.bills.form.BillFormFields
+import com.shopos.bills.data.DraftDatabase
+import com.shopos.bills.form.BillForm
+import com.shopos.bills.form.BillFormController
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,10 +96,9 @@ private fun SignIn(state: AuthUiState, onSignIn: (String, String) -> Unit) {
 private fun SignedIn(state: AuthUiState, auth: AuthViewModel) {
     val user = state.user ?: return
     val repository = remember(user.id) { auth.catalogRepository() }
-    val canRead = user.canReadCatalog()
-    val canCreate = user.canWriteCatalog()
-    var vendor by remember(user.id) { mutableStateOf<CatalogEntry?>(null) }
-    var item by remember(user.id) { mutableStateOf<CatalogEntry?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val controller = remember(user.id) { BillFormController(user.id, DraftDatabase.store(context), auth.billRepository(), scope) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -106,22 +106,7 @@ private fun SignedIn(state: AuthUiState, auth: AuthViewModel) {
         Text("ShopOS", style = MaterialTheme.typography.headlineMedium)
         Text("Signed in as ${user.display_name}")
         Text("Purchase bills", style = MaterialTheme.typography.titleLarge)
-        if (canRead) {
-            CatalogPicker(
-                label = BillFormFields.header.first { it.key == "vendor_id" }.label,
-                kind = CatalogKind.VENDOR,
-                repository = repository,
-                canCreate = canCreate,
-                onSelected = { vendor = it },
-            )
-            CatalogPicker(
-                label = BillFormFields.lineItem.first { it.key == "item_id" }.label,
-                kind = CatalogKind.ITEM,
-                repository = repository,
-                canCreate = canCreate,
-                onSelected = { item = it },
-            )
-        }
+        if (user.canReadCatalog() && user.canCreateBill() && user.canWriteProof()) BillForm(controller, repository, user.canWriteCatalog())
         if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
         TextButton(onClick = auth::logout, enabled = !state.loading) { Text("Sign out") }
     }
