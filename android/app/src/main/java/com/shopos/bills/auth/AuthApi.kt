@@ -15,6 +15,7 @@ data class UserResponse(val id: String, val username: String, val display_name: 
     fun canWriteCatalog(): Boolean = role == "owner" || "catalog:write" in permissions
     fun canCreateBill(): Boolean = role == "owner" || "bills:create" in permissions
     fun canWriteProof(): Boolean = role == "owner" || "attachments:write" in permissions
+    fun canReadBills(): Boolean = role == "owner" || "bills:read" in permissions
 }
 
 interface AuthApi {

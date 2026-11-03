@@ -9,12 +9,11 @@ from sqlalchemy.exc import IntegrityError
 
 from shopos.audit import record_event
 from shopos.auth import CurrentUser, Db, require_permission
-from shopos.models import ProofAttachment, User
+from shopos.models import Bill, ProofAttachment, User
 from shopos.storage import SIGNED_URL_SECONDS, S3Storage, StorageUnavailable, get_storage
 
 router = APIRouter(prefix="/attachments/proofs", tags=["proof attachments"])
 CanWrite = Annotated[User, Depends(require_permission("attachments:write"))]
-CanRead = Annotated[User, Depends(require_permission("attachments:read"))]
 Storage = Annotated[S3Storage, Depends(get_storage)]
 
 
@@ -51,6 +50,18 @@ def storage_error(exc: StorageUnavailable) -> HTTPException:
 def ensure_access(attachment: ProofAttachment, user: User) -> None:
     if user.role != "owner" and attachment.uploaded_by != user.id:
         raise HTTPException(status_code=403, detail="Attachment access denied")
+
+
+def ensure_read_access(db: Db, attachment: ProofAttachment, user: User) -> None:
+    if user.role == "owner":
+        return
+    granted = {entry.permission for entry in user.permissions}
+    linked = db.scalar(select(Bill.id).where(Bill.proof_attachment_id == attachment.id)) is not None
+    if linked and "bills:read" in granted:
+        return
+    if not linked and attachment.uploaded_by == user.id and "attachments:read" in granted:
+        return
+    raise HTTPException(status_code=403, detail="Attachment access denied")
 
 
 def valid_image_header(content_type: str, header: bytes) -> bool:
@@ -157,20 +168,20 @@ def proof_info(attachment: ProofAttachment) -> ProofInfo:
 
 
 @router.get("/{attachment_id}", response_model=ProofInfo)
-def get_proof(attachment_id: UUID, db: Db, user: CurrentUser, _access: CanRead) -> ProofInfo:
+def get_proof(attachment_id: UUID, db: Db, user: CurrentUser) -> ProofInfo:
     attachment = db.get(ProofAttachment, attachment_id)
     if attachment is None:
         raise HTTPException(status_code=404, detail="Attachment not found")
-    ensure_access(attachment, user)
+    ensure_read_access(db, attachment, user)
     return proof_info(attachment)
 
 
 @router.get("/{attachment_id}/download", response_model=DownloadProof)
-def download(attachment_id: UUID, db: Db, user: CurrentUser, _access: CanRead, storage: Storage) -> DownloadProof:
+def download(attachment_id: UUID, db: Db, user: CurrentUser, storage: Storage) -> DownloadProof:
     attachment = db.get(ProofAttachment, attachment_id)
     if attachment is None:
         raise HTTPException(status_code=404, detail="Attachment not found")
-    ensure_access(attachment, user)
+    ensure_read_access(db, attachment, user)
     if attachment.status != "ready":
         raise HTTPException(status_code=409, detail="Attachment upload is incomplete")
     try:

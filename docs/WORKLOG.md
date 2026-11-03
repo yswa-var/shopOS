@@ -53,3 +53,11 @@
 - ADB reported no connected device or emulator, so camera interaction and Room recovery were not manually run. The local storage integration was verified in Q04; Q05 did not repeat that optional live test. Debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 - Commit: `25b7d52` (Q05 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q06 bill search, filters, detail, and authorized proof viewing.
+
+## Q06 — Bill query, detail, and proof viewing
+- Scope: authenticated `GET /bills` with vendor/item alias, employee name, date, and total-amount filters plus bounded pagination; `GET /bills/{id}` with ordered line detail; linked-proof read policy; Android Find bills, detail, and on-demand signed proof viewing; API contract in `docs/bill-query.md`.
+- Acceptance: employees with `bills:read` can find shared shop bills, including another employee's bill, using each required filter and open its detail and proof. An employee without `bills:read` is denied search/detail and linked proof even when they uploaded it and hold `attachments:read`. Unlinked proofs retain their uploader/attachment permission policy. Owners retain full access.
+- Verification (2026-11-04): `DATABASE_URL=... UV_CACHE_DIR=... uv run pytest backend/tests/test_bill_query.py backend/tests/test_attachments.py -q` — 5 passed; `DATABASE_URL=... UV_CACHE_DIR=... JAVA_HOME=... ANDROID_HOME=... make check` — 35 backend tests passed, 1 optional live storage test skipped, 5 Kotlin unit tests passed, Android `assembleDebug` BUILD SUCCESSFUL; `alembic check` — no new upgrade operations; `git diff --check` — clean. ADB reported no attached device, so Android search, detail, and proof viewing were build-checked but not manually exercised.
+- No migration was needed. Search is server-side and uses bounded pages; proof URLs remain short lived and are requested on demand. The optional live S3 test was not repeated in Q06.
+- Commit: pending Q06 implementation commit; this record will be finalized immediately afterward.
+- Next: Q07 owner employee and permission management.

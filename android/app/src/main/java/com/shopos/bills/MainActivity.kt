@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,8 @@ import com.shopos.bills.auth.AuthViewModel
 import com.shopos.bills.data.DraftDatabase
 import com.shopos.bills.form.BillForm
 import com.shopos.bills.form.BillFormController
+import com.shopos.bills.query.BillSearchController
+import com.shopos.bills.query.BillSearchScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,15 +102,25 @@ private fun SignedIn(state: AuthUiState, auth: AuthViewModel) {
     val repository = remember(user.id) { auth.catalogRepository() }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val controller = remember(user.id) { BillFormController(user.id, DraftDatabase.store(context), auth.billRepository(), scope) }
+    val canEnter = user.canReadCatalog() && user.canCreateBill() && user.canWriteProof()
+    val controller = if (canEnter) remember(user.id) { BillFormController(user.id, DraftDatabase.store(context), auth.billRepository(), scope) } else null
+    val search = if (user.canReadBills()) remember(user.id) { BillSearchController(auth.billQueryRepository(), scope) } else null
+    val searchState = search?.state?.collectAsState()
+    var section by remember(user.id) { mutableStateOf(if (canEnter) "entry" else "search") }
+    val scroll = rememberScrollState()
+    LaunchedEffect(section, searchState?.value?.selectedId) { scroll.scrollTo(0) }
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(scroll).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text("ShopOS", style = MaterialTheme.typography.headlineMedium)
         Text("Signed in as ${user.display_name}")
-        Text("Purchase bills", style = MaterialTheme.typography.titleLarge)
-        if (user.canReadCatalog() && user.canCreateBill() && user.canWriteProof()) BillForm(controller, repository, user.canWriteCatalog())
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (canEnter) TextButton(onClick = { section = "entry" }) { Text("New bill") }
+            if (user.canReadBills()) TextButton(onClick = { section = "search" }) { Text("Find bills") }
+        }
+        if (section == "entry" && controller != null) BillForm(controller, repository, user.canWriteCatalog())
+        if (section == "search" && search != null) BillSearchScreen(search)
         if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
         TextButton(onClick = auth::logout, enabled = !state.loading) { Text("Sign out") }
     }

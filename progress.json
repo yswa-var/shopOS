@@ -9,12 +9,12 @@
     "Q03": "complete",
     "Q04": "complete",
     "Q05": "complete",
-    "Q06": "pending",
+    "Q06": "complete",
     "Q07": "pending",
     "Q08": "pending"
   },
   "last_verified_commit": "25b7d52",
-  "next_quest": "Q06",
+  "next_quest": "Q07",
   "blockers": [],
-  "last_update": "Q05 verified: 34 backend tests passed with one optional live storage test skipped, 5 Kotlin tests passed, Android debug build passed, and migration 0006 matches models. No Android device was attached for interactive CameraX or Room checks. Next: Q06 bill query and detail."
+  "last_update": "Q06 verified: 35 backend tests passed with one optional live storage test skipped, 5 Kotlin tests passed, Android debug build passed, and Alembic found no migration drift. No device was attached for interactive search/proof checks. Next: Q07 owner employee and permission management."
 }

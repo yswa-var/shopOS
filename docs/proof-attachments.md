@@ -4,7 +4,7 @@ Q04 provides a two-step upload and signed download contract. The bucket must be 
 
 ## API flow
 
-All requests need an employee bearer token. Employees need `attachments:write` to initiate or complete their own uploads and `attachments:read` to inspect or download them. The owner may access any proof. Q06 will extend download access to employees authorized to view the linked bill.
+All requests need an employee bearer token. Employees need `attachments:write` to initiate or complete their own uploads. Unlinked uploads require `attachments:read` and uploader ownership for inspection or download. Linked proofs follow `bills:read` and can be viewed by any employee allowed to read the bill. The owner may access any proof. See `docs/bill-query.md`.
 
 1. `POST /attachments/proofs/initiate` with `client_upload_id` (UUID), `content_type` (`image/jpeg`, `image/png`, or `image/webp`), and `size_bytes` (1–15,000,000). Store the upload ID with the local draft.
 2. The response gives an attachment `id`, a signed `upload_url`, `required_headers`, and a 300-second lifetime. Send the raw image bytes with HTTP `PUT` to that URL, including the exact `Content-Type` header. This request goes to object storage, not the API.
@@ -13,7 +13,7 @@ All requests need an employee bearer token. Employees need `attachments:write` t
 
 Retry initiation with the same `client_upload_id` and identical metadata to receive the same attachment ID and a fresh signed PUT URL. A ready upload returns `upload_url: null`. Reusing the ID with different metadata returns 409. Completion before upload or with mismatched size/type returns 409; invalid image signatures return 422; storage outage returns 503. These leave the attachment pending so the client can reupload and retry. Completion of an already ready attachment is idempotent. The final key is never exposed through a signed PUT, so a late retry cannot change a completed proof.
 
-The current check recognizes JPEG, PNG, and WebP signatures and does not fully decode the image. Pending uploads and failed temporary-object cleanup need an expiry job in Q08. Q05 adds CameraX capture, local draft recovery, and the bill transaction.
+The current check recognizes JPEG, PNG, and WebP signatures and does not fully decode the image. Pending uploads and failed temporary-object cleanup need an expiry job in Q08. Q05 added CameraX capture, local draft recovery, and the bill transaction. Q06 added linked-bill proof access.
 
 ## Local storage
 
