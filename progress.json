@@ -13,7 +13,7 @@
     "Q07": "pending",
     "Q08": "pending"
   },
-  "last_verified_commit": "9f72a0c",
+  "last_verified_commit": "1746c57",
   "next_quest": "Q04",
   "blockers": [],
   "last_update": "Q03 verified: 27 backend tests and 4 Kotlin unit tests passed; Android debug build succeeded; fresh PostgreSQL migration 0004 is head and matches models. Next: Q04 private proof-photo attachment."

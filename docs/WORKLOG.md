@@ -35,5 +35,5 @@
 - Acceptance: quantity/rate/amount edits preserve the latest entered basis; half-up rounding, multiple lines, optional tax/charges, missing proof, invalid quantity, excess precision, negative money, and binary floats are covered by unit tests. The backend owns final validation and stores source basis with both calculated values.
 - Verification (2026-11-04): `DATABASE_URL=... UV_CACHE_DIR=... uv run alembic upgrade head` on a fresh disposable PostgreSQL database — success; `alembic current` — `0004 (head)`; `alembic check` — no new upgrade operations; `DATABASE_URL=... UV_CACHE_DIR=... JAVA_HOME=... ANDROID_HOME=... make check` — 27 backend tests passed, 4 Kotlin unit tests passed, Android `assembleDebug` BUILD SUCCESSFUL; `git diff --check` — clean.
 - PostgreSQL was run from a disposable local cluster because Docker was stopped. No emulator was connected. Q04 must create attachment metadata and add a foreign key for `bills.proof_attachment_id`; Q05 must implement the save transaction and idempotent response.
-- Commit: Q03 checkpoint; hash to be recorded after commit.
+- Commit: `1746c57` (Q03 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q04 private proof-photo upload and attachment metadata.
