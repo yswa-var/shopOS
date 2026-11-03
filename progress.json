@@ -7,14 +7,14 @@
     "Q01": "complete",
     "Q02": "complete",
     "Q03": "complete",
-    "Q04": "pending",
+    "Q04": "complete",
     "Q05": "pending",
     "Q06": "pending",
     "Q07": "pending",
     "Q08": "pending"
   },
   "last_verified_commit": "1746c57",
-  "next_quest": "Q04",
+  "next_quest": "Q05",
   "blockers": [],
-  "last_update": "Q03 verified: 27 backend tests and 4 Kotlin unit tests passed; Android debug build succeeded; fresh PostgreSQL migration 0004 is head and matches models. Next: Q04 private proof-photo attachment."
+  "last_update": "Q04 verified: 31 backend tests passed with one optional live test skipped in the standard check; 4 Kotlin tests and Android build passed; a separate live signed upload/download test passed against private local S3; migration 0005 matches models. Next: Q05 bill ingest, draft recovery, and idempotent save."
 }

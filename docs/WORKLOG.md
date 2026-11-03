@@ -37,3 +37,11 @@
 - PostgreSQL was run from a disposable local cluster because Docker was stopped. No emulator was connected. Q04 must create attachment metadata and add a foreign key for `bills.proof_attachment_id`; Q05 must implement the save transaction and idempotent response.
 - Commit: `1746c57` (Q03 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q04 private proof-photo upload and attachment metadata.
+
+## Q04 — Private proof-photo attachments
+- Scope: S3-compatible storage adapter; signed temporary PUT and signed final GET URLs; attachment metadata and bill foreign key in migration 0005; authenticated initiate/status/complete/download endpoints; image size/type/signature checks; retryable client upload IDs; local SeaweedFS service and bucket setup; Render storage environment configuration; API contract in `docs/proof-attachments.md`.
+- Acceptance: employees can only access their own proofs with attachment grants; the owner can access all. A pending upload can receive a fresh signed URL; incomplete, mismatched, invalid, or failed storage operations leave it retryable. Completion copies to a private final key and is idempotent. Direct unsigned GET is denied.
+- Verification (2026-11-04): `DATABASE_URL=... UV_CACHE_DIR=... uv run alembic upgrade head` on a fresh disposable PostgreSQL database — success, revision 0005; `alembic check` — no new upgrade operations; `docker compose config --quiet` — success; `DATABASE_URL=... UV_CACHE_DIR=... JAVA_HOME=... ANDROID_HOME=... make check` — 31 backend tests passed, 1 optional live test skipped, 4 Kotlin tests passed, Android BUILD SUCCESSFUL; `SHOPOS_TEST_S3=1 ... uv run pytest backend/tests/test_storage_live.py -q` — 1 passed against local SeaweedFS, including signed PUT, completion copy, signed GET, and denied unsigned GET; `git diff --check` — clean.
+- The first MinIO image pull failed because its Docker Hub image was unavailable. Local Compose was changed to a pinned SeaweedFS image and a live S3 flow passed. Render deployment was not run. The current image check verifies file signatures, not full decode; Q08 should add expiry cleanup for abandoned temporary objects.
+- Commit: Q04 checkpoint; hash to be recorded after commit.
+- Next: Q05 Android CameraX bill ingest, Room draft recovery, attachment ownership check, and idempotent bill save.

@@ -1,10 +1,18 @@
-.PHONY: db-up db-down install migrate api test check
+.PHONY: db-up db-down storage-up storage-down install migrate api test check
 
 db-up:
 	docker compose up -d db
 
 db-down:
 	docker compose down
+
+storage-up:
+	uv run --env-file .env python -m shopos.storage_init config
+	docker compose up -d storage
+	uv run --env-file .env python -m shopos.storage_init bucket
+
+storage-down:
+	docker compose stop storage
 
 install:
 	uv sync --extra test

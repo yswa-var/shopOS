@@ -18,6 +18,7 @@ __pycache__/
 local.properties
 *.iml
 .idea/
+.local/
 
 # Local data and generated artifacts
 .DS_Store

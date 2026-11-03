@@ -1,6 +1,6 @@
 # Bill calculation and validation contract
 
-Q03 defines the bill model and arithmetic used by Q05. A saved bill has one vendor, a bill date, one or more item lines, a proof attachment ID, a creator, an idempotency key, timestamps, optional tax and charges, and a final payable total. The proof attachment ID is required in the input and database. Q04 adds its attachment table and foreign key; Q05 implements saving.
+Q03 defines the bill model and arithmetic used by Q05. A saved bill has one vendor, a bill date, one or more item lines, a proof attachment ID, a creator, an idempotency key, timestamps, optional tax and charges, and a final payable total. The proof attachment ID is required in the input and database. Q04 provides its attachment table and foreign key; Q05 implements saving.
 
 ## Decimal policy
 

@@ -112,7 +112,7 @@ class Bill(Base):
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     vendor_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False, index=True)
     bill_date: Mapped[date] = mapped_column(Date, nullable=False)
-    proof_attachment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    proof_attachment_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("proof_attachments.id"), nullable=False, index=True)
     idempotency_key: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
     tax_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0.00")
     charges_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0.00")
@@ -140,3 +140,23 @@ class BillLine(Base):
     unit_rate: Mapped[Decimal] = mapped_column(Numeric(16, 4), nullable=False)
     line_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     bill: Mapped[Bill] = relationship(back_populates="lines")
+
+
+class ProofAttachment(Base):
+    __tablename__ = "proof_attachments"
+    __table_args__ = (
+        UniqueConstraint("uploaded_by", "client_upload_id", name="uq_proof_uploader_upload_id"),
+        CheckConstraint("size_bytes > 0 AND size_bytes <= 15000000", name="valid_proof_size"),
+        CheckConstraint("status IN ('pending', 'ready')", name="valid_proof_status"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    client_upload_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    uploaded_by: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    content_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    upload_key: Mapped[str] = mapped_column(String(160), nullable=False, unique=True)
+    object_key: Mapped[str] = mapped_column(String(160), nullable=False, unique=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    ready_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

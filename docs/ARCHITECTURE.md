@@ -30,6 +30,7 @@ PostgreSQL (authoritative shared records)
 - Bill arithmetic lives in Python and Kotlin domain code. The backend validates source price inputs and recomputes totals; each stored line retains whether rate or amount was entered. See `docs/bill-domain.md`.
 - Database migrations are additive and reviewed; saved records are not silently reshaped.
 - Photos are private objects. The database stores object keys and metadata, never long-lived public links.
+- A signed PUT writes a temporary key. After size, type, and signature checks, the server copies it to a final private key and checks the copy before marking it ready. Signed GET URLs are issued only after API authorization.
 
 ## Keep v1 small
 Use one Android app, one modular backend, and one PostgreSQL database. Do not introduce microservices, message brokers, or offline write synchronization for v1.
