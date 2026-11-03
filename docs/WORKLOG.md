@@ -21,3 +21,11 @@
 - Checks used disposable PostgreSQL 16 because the Docker daemon was stopped. No hosted CI or Render deploy was run. Android login was build-checked; interactive emulator sign-in was not run.
 - Commit: `03caf41` (Q01 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q02 catalog search/create API and Android selector flow. Employee creation and permission editing remain assigned to Q07; authentication rate limiting is a hardening follow-up for Q08.
+
+## Q02 — Vendor and item catalogs
+- Scope: vendor/item tables and shared unique catalog terms in migration 0003; authenticated search, creation, and alias endpoints; duplicate conflict responses; catalog audit records; reusable Android pickers with in-memory filtering, server search, inline creation, and alias entry; API contract in `docs/catalog-api.md`.
+- Acceptance: search matches canonical names and aliases; duplicate names or aliases return 409 with the existing ID; employees need `catalog:read`/`catalog:write`; the Android selector flow builds and keeps the selected record in state. Exact and prefix matches rank before usage and recency.
+- Verification (2026-11-04): `DATABASE_URL=... UV_CACHE_DIR=... uv run alembic upgrade head` on a fresh disposable database — success; `alembic current` — `0003 (head)`; `alembic check` — no new upgrade operations; `DATABASE_URL=... UV_CACHE_DIR=... uv run pytest` — 8 passed; `JAVA_HOME=... ANDROID_HOME=... ./gradlew :app:assembleDebug` — BUILD SUCCESSFUL; `git diff --check` — clean.
+- PostgreSQL was run from a disposable local cluster because Docker was stopped. No emulator was connected, so Android picker interactions were not run on-device; the Compose code and API integration were build/test verified.
+- Commit: Q02 checkpoint; hash to be recorded after commit.
+- Next: Q03 decimal-safe bill calculation and validation. Q05 will connect selected vendor/item IDs to bill drafts and increment catalog usage on saved bills.

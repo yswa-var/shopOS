@@ -5,7 +5,7 @@
   "quests": {
     "Q00": "complete",
     "Q01": "complete",
-    "Q02": "pending",
+    "Q02": "complete",
     "Q03": "pending",
     "Q04": "pending",
     "Q05": "pending",
@@ -14,7 +14,7 @@
     "Q08": "pending"
   },
   "last_verified_commit": "03caf41",
-  "next_quest": "Q02",
+  "next_quest": "Q03",
   "blockers": [],
-  "last_update": "Q01 verified: 5 backend tests passed against disposable PostgreSQL; migration 0002 is head and matches models; Android assembleDebug succeeded. Next: Q02 vendor/item catalog and selector flow."
+  "last_update": "Q02 verified: 8 backend tests passed on fresh disposable PostgreSQL; migration 0003 is head and matches models; Android assembleDebug succeeded. Next: Q03 bill calculation and validation."
 }

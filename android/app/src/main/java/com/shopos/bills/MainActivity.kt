@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shopos.bills.auth.AuthUiState
 import com.shopos.bills.auth.AuthViewModel
+import com.shopos.bills.catalog.CatalogKind
+import com.shopos.bills.catalog.CatalogPicker
+import com.shopos.bills.catalog.CatalogEntry
+import com.shopos.bills.form.BillFormFields
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +49,7 @@ private fun ShopOsApp(auth: AuthViewModel = viewModel()) {
             if (state.user == null) {
                 SignIn(state, auth::login)
             } else {
-                SignedIn(state, auth::logout)
+                SignedIn(state, auth)
             }
         }
     }
@@ -86,15 +92,37 @@ private fun SignIn(state: AuthUiState, onSignIn: (String, String) -> Unit) {
 }
 
 @Composable
-private fun SignedIn(state: AuthUiState, onSignOut: () -> Unit) {
+private fun SignedIn(state: AuthUiState, auth: AuthViewModel) {
+    val user = state.user ?: return
+    val repository = remember(user.id) { auth.catalogRepository() }
+    val canRead = user.canReadCatalog()
+    val canCreate = user.canWriteCatalog()
+    var vendor by remember(user.id) { mutableStateOf<CatalogEntry?>(null) }
+    var item by remember(user.id) { mutableStateOf<CatalogEntry?>(null) }
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text("ShopOS", style = MaterialTheme.typography.headlineMedium)
-        Text("Signed in as ${state.user?.display_name}")
+        Text("Signed in as ${user.display_name}")
         Text("Purchase bills", style = MaterialTheme.typography.titleLarge)
+        if (canRead) {
+            CatalogPicker(
+                label = BillFormFields.header.first { it.key == "vendor_id" }.label,
+                kind = CatalogKind.VENDOR,
+                repository = repository,
+                canCreate = canCreate,
+                onSelected = { vendor = it },
+            )
+            CatalogPicker(
+                label = BillFormFields.lineItem.first { it.key == "item_id" }.label,
+                kind = CatalogKind.ITEM,
+                repository = repository,
+                canCreate = canCreate,
+                onSelected = { item = it },
+            )
+        }
         if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
-        TextButton(onClick = onSignOut, enabled = !state.loading) { Text("Sign out") }
+        TextButton(onClick = auth::logout, enabled = !state.loading) { Text("Sign out") }
     }
 }

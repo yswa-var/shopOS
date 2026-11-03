@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.shopos.bills.catalog.CatalogRepository
+import com.shopos.bills.catalog.catalogRepository
 
 data class AuthUiState(
     val user: UserResponse? = null,
@@ -18,6 +20,8 @@ class AuthViewModel : ViewModel() {
     private val mutableState = MutableStateFlow(AuthUiState())
     val state: StateFlow<AuthUiState> = mutableState.asStateFlow()
     private var token: String? = null
+
+    fun catalogRepository(): CatalogRepository = catalogRepository { token }
 
     fun login(username: String, password: String) {
         if (mutableState.value.loading) return

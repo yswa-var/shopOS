@@ -1,6 +1,6 @@
 # ShopOS
 
-ShopOS is an Android and FastAPI project for fast purchase bill entry. Q00 provides the API and build shell; Q01 adds account sign-in, revocable sessions, and permission checks. Bill entry and search follow in later quests; see `QUESTS.md` and `progress.json`.
+ShopOS is an Android and FastAPI project for fast purchase bill entry. Q00 provides the API and build shell; Q01 adds account sign-in; Q02 adds searchable vendor and item catalogs with inline creation. Bill entry and search follow in later quests; see `QUESTS.md` and `progress.json`.
 
 ## Local backend
 
@@ -20,6 +20,8 @@ The bootstrap command prompts for a password and only succeeds when no users exi
 
 `POST /auth/login` accepts `{"username":"...","password":"..."}` and returns a bearer token and user profile. Send the token in `Authorization: Bearer <token>`. `GET /auth/me` checks it; `POST /auth/logout` revokes it. Tokens expire after 12 hours, and a deactivated account loses access immediately. The owner-only `GET /audit/events` route is the first protected audit operation. Employee creation and permission editing arrive in Q07.
 
+Catalog search and inline creation are described in [docs/catalog-api.md](docs/catalog-api.md). The first owner can use them immediately. Employees need `catalog:read` and `catalog:write` grants, which the owner will manage in Q07.
+
 Run `make test` for backend tests. The baseline migration is intentionally empty; later quests add tables through Alembic.
 
 ## Android shell
@@ -31,7 +33,7 @@ cd android
 ./gradlew :app:assembleDebug
 ```
 
-The APK is `android/app/build/outputs/apk/debug/app-debug.apk`. The debug app signs in through `http://10.0.2.2:8000/` on the Android emulator. For a physical device, pass `-PshoposApiBaseUrl=http://YOUR-LAN-IP:8000/` and keep the device and server on the same network. Release builds default to an unusable URL; pass an HTTPS base URL with `-PshoposApiBaseUrl=https://YOUR-API/`. Credentials and session tokens remain in app memory and require sign-in again after process restart. Keep SDK locations in ignored `android/local.properties` if preferred.
+The APK is `android/app/build/outputs/apk/debug/app-debug.apk`. The debug app signs in through `http://10.0.2.2:8000/` on the Android emulator. The signed-in screen has reusable vendor and item pickers. For a physical device, pass `-PshoposApiBaseUrl=http://YOUR-LAN-IP:8000/` and keep the device and server on the same network. Release builds default to an unusable URL; pass an HTTPS base URL with `-PshoposApiBaseUrl=https://YOUR-API/`. Credentials and session tokens remain in app memory and require sign-in again after process restart. Keep SDK locations in ignored `android/local.properties` if preferred.
 
 ## Render deployment
 
