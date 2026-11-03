@@ -13,7 +13,7 @@
     "Q07": "pending",
     "Q08": "pending"
   },
-  "last_verified_commit": "25b7d52",
+  "last_verified_commit": "fc013b7",
   "next_quest": "Q07",
   "blockers": [],
   "last_update": "Q06 verified: 35 backend tests passed with one optional live storage test skipped, 5 Kotlin tests passed, Android debug build passed, and Alembic found no migration drift. No device was attached for interactive search/proof checks. Next: Q07 owner employee and permission management."
