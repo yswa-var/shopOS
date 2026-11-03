@@ -1,32 +1,41 @@
-# ShopOS Starter
+# ShopOS
 
-A Codex-ready project base for the ShopOS bill-ingestion app. It gives Codex the product rules, build order, durable progress file, recovery instructions, and a central Android bill-field registry.
+ShopOS is an Android and FastAPI starter for fast purchase bill entry. Q00 provides a running API, PostgreSQL migration path, and a compiling Compose shell. Bill workflows and authentication start in later quests; see `QUESTS.md` and `progress.json`.
 
-## Start here
+## Local backend
 
-1. Open this folder as the project in Codex.
-2. Review `PRD.md` and `QUESTS.md`.
-3. Run the kickoff prompt in `CODEX_START.md`.
-4. Let Codex finish Q00, verify it, then continue one checkpoint at a time.
+Requires Python 3.12+, `uv`, and Docker with the daemon running. PostgreSQL 16 can also be run directly; use its connection string in `DATABASE_URL`.
 
-The starter deliberately begins with Q00 pending. It is a development scaffold, not a completed production ERP.
+```sh
+cp .env.example .env
+make db-up
+make install
+set -a; . ./.env; set +a
+make migrate
+make api
+```
 
-## Make a bill field change
+The example password is for local testing only. The API responds at `http://localhost:8000/health`; `/ready` also checks PostgreSQL. Stop the database with `make db-down`. The Compose volume retains local data between starts.
 
-Edit `android/app/src/main/java/com/shopos/bills/form/BillFormFields.kt`. Each field keeps its label, input kind, required state, and visibility together. Follow `docs/field-config.md` for the complete change path, including backend validation and migration work.
+Run `make test` for backend tests. The baseline migration is intentionally empty; later quests add tables through Alembic.
 
-Examples:
-- Add a field: add one `BillFieldSpec` and implement its value/validation mapping.
-- Make a field optional: change `required = true` to `false`, then update backend schema, database constraints, and tests.
-- Hide a field: change its visibility rule; do not delete stored data or API support without a migration plan.
+## Android shell
 
-## Development checkpoints
+Open `android/` in Android Studio, or set `JAVA_HOME` and `ANDROID_HOME` and run:
 
-- `progress.json` says which quest is next.
-- `docs/WORKLOG.md` records what was verified.
-- Git commits preserve each completed checkpoint.
-- Unfinished work stays visible in Git status and must not be discarded during recovery.
+```sh
+cd android
+./gradlew :app:assembleDebug
+```
 
-## Local setup
+The APK is `android/app/build/outputs/apk/debug/app-debug.apk`. Q00 only builds the launch shell, so it does not yet connect to the API. Keep SDK locations in ignored `android/local.properties` if preferred.
 
-Q00 owns the actual backend and Android setup files. Keep local credentials in `.env` and `local.properties`; commit only `.env.example` with fake placeholders. See `docs/ARCHITECTURE.md` for the intended boundaries.
+## Render deployment
+
+`render.yaml` defines a paid web service and a private PostgreSQL database. Create a Render Blueprint from this repository; Render injects `DATABASE_URL`, applies `alembic upgrade head` before deployment, then starts Uvicorn. Check `/health` after deploy. Review plan cost and region before creating the Blueprint. Q00 is infrastructure scaffolding, not a deployable bill workflow.
+
+The database URL is read from the environment and normalized for psycopg, so local PostgreSQL and Render use the same application path. Change databases through reviewed Alembic migrations. Never commit `.env` or real bill/photo data.
+
+## Field changes
+
+Bill form metadata belongs in `android/app/src/main/java/com/shopos/bills/form/BillFormFields.kt`. Follow `docs/field-config.md` when adding a field so the UI, API, validation, migration, and detail view stay aligned.

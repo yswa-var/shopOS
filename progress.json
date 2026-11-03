@@ -1,9 +1,9 @@
 {
   "project": "ShopOS",
   "schema_version": 1,
-  "status": "starter",
+  "status": "in_progress",
   "quests": {
-    "Q00": "pending",
+    "Q00": "complete",
     "Q01": "pending",
     "Q02": "pending",
     "Q03": "pending",
@@ -13,8 +13,8 @@
     "Q07": "pending",
     "Q08": "pending"
   },
-  "last_verified_commit": null,
-  "next_quest": "Q00",
+  "last_verified_commit": "Q00 checkpoint (see git log)",
+  "next_quest": "Q01",
   "blockers": [],
-  "last_update": "Starter created; no implementation quest has been completed."
+  "last_update": "Q00 verified: backend tests 2 passed; baseline migration at 0001 on disposable PostgreSQL; HTTP /health and /ready returned 200; Android assembleDebug succeeded. Next: Q01 authentication, owner bootstrap, RBAC, and audit."
 }

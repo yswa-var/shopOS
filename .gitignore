@@ -10,6 +10,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+*.egg-info/
 
 # Android / Gradle
 .gradle/
@@ -19,6 +20,7 @@ local.properties
 .idea/
 
 # Local data and generated artifacts
+.DS_Store
 *.db
 *.sqlite3
 uploads/
