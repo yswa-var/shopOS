@@ -34,6 +34,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shopos.bills.auth.AuthUiState
 import com.shopos.bills.auth.AuthViewModel
 import com.shopos.bills.data.DraftDatabase
+import com.shopos.bills.employees.EmployeeController
+import com.shopos.bills.employees.EmployeeScreen
 import com.shopos.bills.form.BillForm
 import com.shopos.bills.form.BillFormController
 import com.shopos.bills.query.BillSearchController
@@ -105,6 +107,7 @@ private fun SignedIn(state: AuthUiState, auth: AuthViewModel) {
     val canEnter = user.canReadCatalog() && user.canCreateBill() && user.canWriteProof()
     val controller = if (canEnter) remember(user.id) { BillFormController(user.id, DraftDatabase.store(context), auth.billRepository(), scope) } else null
     val search = if (user.canReadBills()) remember(user.id) { BillSearchController(auth.billQueryRepository(), scope) } else null
+    val employees = if (user.role == "owner") remember(user.id) { EmployeeController(auth.employeeRepository(), scope) } else null
     val searchState = search?.state?.collectAsState()
     var section by remember(user.id) { mutableStateOf(if (canEnter) "entry" else "search") }
     val scroll = rememberScrollState()
@@ -118,9 +121,11 @@ private fun SignedIn(state: AuthUiState, auth: AuthViewModel) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (canEnter) TextButton(onClick = { section = "entry" }) { Text("New bill") }
             if (user.canReadBills()) TextButton(onClick = { section = "search" }) { Text("Find bills") }
+            if (employees != null) TextButton(onClick = { section = "employees" }) { Text("Employees") }
         }
         if (section == "entry" && controller != null) BillForm(controller, repository, user.canWriteCatalog())
         if (section == "search" && search != null) BillSearchScreen(search)
+        if (section == "employees" && employees != null) EmployeeScreen(employees)
         if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
         TextButton(onClick = auth::logout, enabled = !state.loading) { Text("Sign out") }
     }

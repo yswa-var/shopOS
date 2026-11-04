@@ -12,6 +12,8 @@ import com.shopos.bills.data.BillRepository
 import com.shopos.bills.data.billRepository
 import com.shopos.bills.data.BillQueryRepository
 import com.shopos.bills.data.billQueryRepository
+import com.shopos.bills.data.EmployeeRepository
+import com.shopos.bills.data.employeeRepository
 
 data class AuthUiState(
     val user: UserResponse? = null,
@@ -28,6 +30,7 @@ class AuthViewModel : ViewModel() {
     fun catalogRepository(): CatalogRepository = catalogRepository { token }
     fun billRepository(): BillRepository = billRepository { token }
     fun billQueryRepository(): BillQueryRepository = billQueryRepository { token }
+    fun employeeRepository(): EmployeeRepository = employeeRepository { token }
 
     fun login(username: String, password: String) {
         if (mutableState.value.loading) return

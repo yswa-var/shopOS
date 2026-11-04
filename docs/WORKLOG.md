@@ -61,3 +61,11 @@
 - No migration was needed. Search is server-side and uses bounded pages; proof URLs remain short lived and are requested on demand. The optional live S3 test was not repeated in Q06.
 - Commit: `fc013b7` (Q06 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q07 owner employee and permission management.
+
+## Q07 — Owner employee and permission management
+- Scope: owner-only employee list/create, grant catalog and updates, display-name edit, password reset, deactivate/reactivate API; immediate session revocation and transactional audit; Android owner management screen; contract in `docs/employee-management.md`.
+- Acceptance: the owner can create employees, replace grants, rename, reset passwords, deactivate, and reactivate. Employees are denied all management endpoints even if assigned an `employees:manage` string. Permission revocation takes effect on the next request; password reset and deactivation invalidate existing sessions. Owner accounts cannot be changed through employee endpoints.
+- Verification (2026-11-04): `DATABASE_URL=... UV_CACHE_DIR=... uv run alembic upgrade head` on a fresh disposable PostgreSQL 16 database — success; `alembic current` — `0006 (head)`; `alembic check` — no new upgrade operations; `DATABASE_URL=... UV_CACHE_DIR=... JAVA_HOME=... ANDROID_HOME=... make check` — 36 backend tests passed, 1 optional live storage test skipped, 5 Kotlin unit tests passed, Android `assembleDebug` BUILD SUCCESSFUL; `git diff --check` — clean. The Q07 integration test covers owner-only access, duplicate/invalid creation, live grant changes, profile edit, password reset, deactivation/reactivation, session revocation, and audit events.
+- No schema migration was needed. A device was attached during the final check, but the owner screen was not exercised interactively; the debug APK's default API URL targets the Android emulator, while the API tests ran against the disposable host database.
+- Commit: pending Q07 implementation commit; this record will be finalized immediately afterward.
+- Next: Q08 integration hardening, release handoff, and `docs/FINAL_REPORT.md`.

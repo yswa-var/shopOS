@@ -8,6 +8,7 @@ from shopos.models import AuditEvent
 from shopos.catalog import router as catalog_router
 from shopos.attachments import router as attachments_router
 from shopos.bills.api import router as bills_router
+from shopos.employees import router as employees_router
 from sqlalchemy import select
 
 
@@ -16,6 +17,7 @@ app.include_router(auth_router)
 app.include_router(catalog_router)
 app.include_router(attachments_router)
 app.include_router(bills_router)
+app.include_router(employees_router)
 
 
 @app.get("/health")
