@@ -6,6 +6,8 @@ ShopOS is an online-first Android app and FastAPI service for recording and find
 
 Requirements: Python 3.12+, `uv`, Docker with Compose, Android Studio or Android SDK, and JDK 17+. The local stack uses PostgreSQL 16 and a private SeaweedFS S3-compatible bucket. A separately managed PostgreSQL server can replace the Compose database by setting `DATABASE_URL` accordingly.
 
+The Compose database listens on host port **5433** by default, leaving port 5432 available to a local PostgreSQL installation. If you already have a `.env` copied from an earlier version, set its `DATABASE_URL` port to `5433` and add `SHOPOS_DB_HOST_PORT=5433` before starting the database container.
+
 ```sh
 cp .env.example .env
 # Replace S3_SECRET_ACCESS_KEY in the ignored .env file.

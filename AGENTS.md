@@ -3,6 +3,8 @@
 ## Mission
 Build a fast, employee-friendly Android app for recording and finding purchase bills. The app must fit the shop's current workflow and must not slow the counter.
 
+and make it deployment friendly for local server (testing) make file and easy render.com deployment and db usage keep the code open for future changes like cloud provided or db migration safe development, simple code strategy i follow check everything before using that for smooth set of operations
+
 ## Product boundaries
 - V1: employee login, bill ingest, vendor/item quick-create, proof photo, bill search, owner-only employee/permission management.
 - A bill supports multiple line items.
