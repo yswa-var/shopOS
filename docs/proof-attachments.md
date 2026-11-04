@@ -13,7 +13,7 @@ All requests need an employee bearer token. Employees need `attachments:write` t
 
 Retry initiation with the same `client_upload_id` and identical metadata to receive the same attachment ID and a fresh signed PUT URL. A ready upload returns `upload_url: null`. Reusing the ID with different metadata returns 409. Completion before upload or with mismatched size/type returns 409; invalid image signatures return 422; storage outage returns 503. These leave the attachment pending so the client can reupload and retry. Completion of an already ready attachment is idempotent. The final key is never exposed through a signed PUT, so a late retry cannot change a completed proof.
 
-The current check recognizes JPEG, PNG, and WebP signatures and does not fully decode the image. Pending uploads and failed temporary-object cleanup need an expiry job in Q08. Q05 added CameraX capture, local draft recovery, and the bill transaction. Q06 added linked-bill proof access.
+The current check recognizes JPEG, PNG, and WebP signatures and does not fully decode the image. Q05 added CameraX capture, local draft recovery, and the bill transaction. Q06 added linked-bill proof access. Q08 added a bounded cleanup command: `uv run python -m shopos.proof_cleanup --limit 100`. It deletes pending uploads older than seven days, removes their temporary and unlinked final objects, and retries failed temporary-object deletion for ready proofs. Ready proof objects are retained. Schedule the command in production; it is not run by the API process.
 
 ## Local storage
 

@@ -1,13 +1,14 @@
 # ShopOS
 
-ShopOS is an Android and FastAPI project for fast purchase bill entry. Q00 provides the API and build shell; Q01 adds sign-in; Q02 adds catalogs; Q03 defines bill calculations; Q04 adds private proof-photo attachments. Bill save and search follow in later quests; see `QUESTS.md` and `progress.json`.
+ShopOS is an online-first Android app and FastAPI service for recording and finding supplier purchase bills. Employees can create vendors and items during entry, attach a required proof photo, save multi-item bills safely, and search shared bills. The owner manages employee accounts and permissions. PostgreSQL is authoritative; Room keeps an unfinished bill draft on the device.
 
-## Local backend
+## Run locally
 
-Requires Python 3.12+, `uv`, and Docker with the daemon running. PostgreSQL 16 can also be run directly; use its connection string in `DATABASE_URL`.
+Requirements: Python 3.12+, `uv`, Docker with Compose, Android Studio or Android SDK, and JDK 17+. The local stack uses PostgreSQL 16 and a private SeaweedFS S3-compatible bucket. A separately managed PostgreSQL server can replace the Compose database by setting `DATABASE_URL` accordingly.
 
 ```sh
 cp .env.example .env
+# Replace S3_SECRET_ACCESS_KEY in the ignored .env file.
 make db-up
 make install
 set -a; . ./.env; set +a
@@ -17,35 +18,31 @@ uv run python -m shopos.bootstrap --username owner --display-name "Shop Owner"
 make api
 ```
 
-The bootstrap command prompts for a password and only succeeds when no users exist. Use an individual owner account; never put a real password in a command or committed file. Replace the example local storage secret in `.env`. The API responds at `http://localhost:8000/health`; `/ready` also checks PostgreSQL. `make storage-up` starts a private local S3-compatible service and creates its bucket. `make storage-down` stops it; `make db-down` stops the whole Compose stack. Volumes retain local test data between starts.
+Bootstrap prompts for the owner password and works only before the first user exists. `/health` checks the API process; `/ready` checks PostgreSQL. `make storage-up` writes an ignored local S3 identity file, starts SeaweedFS, and creates the private bucket. `make storage-down` and `make db-down` stop the services without deleting their volumes. Use synthetic data for tests.
 
-`POST /auth/login` accepts `{"username":"...","password":"..."}` and returns a bearer token and user profile. Send the token in `Authorization: Bearer <token>`. `GET /auth/me` checks it; `POST /auth/logout` revokes it. Tokens expire after 12 hours, and a deactivated account loses access immediately. The owner-only `GET /audit/events` route is the first protected audit operation. Employee creation and permission editing arrive in Q07.
+Run `make check` after exporting `DATABASE_URL`, `JAVA_HOME`, and `ANDROID_HOME`. This runs PostgreSQL-backed pytest tests, Alembic drift detection, Kotlin unit tests, and the Android debug build. For an optional live signed storage check, follow [proof-attachments.md](docs/proof-attachments.md). Expired pending uploads and leftover temporary objects can be cleaned in bounded batches with `make cleanup-proofs` (or the equivalent Python module command); schedule this command in production after choosing an operating cadence. Pending uploads older than seven days are eligible by default; saved proof objects are retained.
 
-Catalog search and inline creation are described in [docs/catalog-api.md](docs/catalog-api.md). The first owner can use them immediately. Employees need `catalog:read` and `catalog:write` grants, which the owner will manage in Q07.
+## Android testing
 
-Bill pricing and validation rules are in [docs/bill-domain.md](docs/bill-domain.md). Q03 defines the model and request schema; Q05 adds the save endpoint after proof-photo attachment work.
+Open `android/` in Android Studio or run `cd android && ./gradlew :app:assembleDebug`. The debug APK is at `android/app/build/outputs/apk/debug/app-debug.apk`. Its default API base URL is `http://10.0.2.2:8000/` for the Android emulator, and `.env.example` uses `http://10.0.2.2:9000` for signed photo URLs. The release build requires an HTTPS API URL and a signing configuration supplied outside the repository.
 
-The signed proof-photo API and local S3 setup are in [docs/proof-attachments.md](docs/proof-attachments.md). Q05 will connect the Android camera and bill save flow.
-
-Run `make test` for backend tests. The baseline migration is intentionally empty; later quests add tables through Alembic.
-
-## Android shell
-
-Open `android/` in Android Studio, or set `JAVA_HOME` and `ANDROID_HOME` and run:
+For a physical device connected with ADB, use port forwarding rather than exposing local services on the network:
 
 ```sh
-cd android
-./gradlew :app:assembleDebug
+adb reverse tcp:8000 tcp:8000
+adb reverse tcp:9000 tcp:9000
 ```
 
-The APK is `android/app/build/outputs/apk/debug/app-debug.apk`. The debug app signs in through `http://10.0.2.2:8000/` on the Android emulator. The signed-in screen has reusable vendor and item pickers. For a physical device, pass `-PshoposApiBaseUrl=http://YOUR-LAN-IP:8000/` and keep the device and server on the same network. Release builds default to an unusable URL; pass an HTTPS base URL with `-PshoposApiBaseUrl=https://YOUR-API/`. Credentials and session tokens remain in app memory and require sign-in again after process restart. Keep SDK locations in ignored `android/local.properties` if preferred.
+Set `S3_PUBLIC_ENDPOINT_URL=http://127.0.0.1:9000` for that local API process, then build the debug APK with `-PshoposApiBaseUrl=http://127.0.0.1:8000/`. Keep the device connected while testing. Before installing, check whether ShopOS is already present so an existing local draft is not overwritten. The release build should use HTTPS endpoints reachable by the device for both API and object storage.
 
-## Render deployment
+## Deploy on Render
 
-`render.yaml` defines a paid web service and a private PostgreSQL database. Create a Render Blueprint from this repository; Render injects `DATABASE_URL`, applies `alembic upgrade head` before deployment, then starts Uvicorn. Provide a private S3-compatible bucket and its endpoint, region, and credentials in Render's prompted environment variables. For an existing Blueprint, set newly added `sync: false` variables manually in the dashboard. Check `/health` after deploy. Review plan cost and region before creating the Blueprint. Bill save still awaits Q05.
+`render.yaml` defines a paid Python web service and private PostgreSQL database. Create a Render Blueprint from this repository, review its region and cost, and supply the prompted `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT_URL`, `S3_ACCESS_KEY_ID`, and `S3_SECRET_ACCESS_KEY` values for a private S3-compatible bucket. If the bucket needs a distinct client-facing endpoint, set `S3_PUBLIC_ENDPOINT_URL` to its HTTPS URL in the service environment. For an existing Blueprint, add newly introduced `sync: false` variables in the dashboard.
 
-The database URL is read from the environment and normalized for psycopg, so local PostgreSQL and Render use the same application path. Run the same bootstrap command in the Render service shell after its first migration. Change databases through reviewed Alembic migrations. Never commit `.env` or real bill/photo data.
+The Blueprint installs the locked Python dependencies with uv, runs Alembic before each deployment, starts Uvicorn, and uses `/ready` as its health check. After the first deployment, run the owner bootstrap command once in the Render service shell. Build the Android release artifact with `-PshoposApiBaseUrl=https://YOUR-API/` and your private signing setup. No credentials, customer records, production photos, or signing keys belong in Git.
 
-## Field changes
+[Render Blueprint reference](https://render.com/docs/blueprint-spec) · [Render uv support](https://render.com/docs/uv-version) · [Render Python version](https://render.com/docs/python-version)
 
-Bill form metadata belongs in `android/app/src/main/java/com/shopos/bills/form/BillFormFields.kt`. Follow `docs/field-config.md` when adding a field so the UI, API, validation, migration, and detail view stay aligned.
+## Design and changes
+
+The main flow and boundaries are in [PRD.md](PRD.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), and [FINAL_REPORT.md](docs/FINAL_REPORT.md). Bill rules, query permissions, proof access, and employee management have separate contracts in `docs/`. Form field metadata lives in `android/app/src/main/java/com/shopos/bills/form/BillFormFields.kt`; follow [field-config.md](docs/field-config.md) when adding a field. Add database changes through reviewed Alembic migrations so local and hosted databases follow the same path.

@@ -64,7 +64,17 @@ class BillFormController(
     fun line(localId: String, edit: (BillLineSnapshot) -> BillLineSnapshot) = change { draft ->
         draft.copy(lines = draft.lines.map { if (it.localId == localId) edit(it) else it })
     }
-    fun photo(file: File) = change { it.copy(proofPath = file.absolutePath, proofAttachmentId = null, proofUploadId = java.util.UUID.randomUUID().toString()) }
+    fun photo(file: File) {
+        val oldPath = mutableState.value.draft.proofPath
+        change { it.copy(proofPath = file.absolutePath, proofAttachmentId = null, proofUploadId = java.util.UUID.randomUUID().toString()) }
+        // Camera retries replace an app-private photo; keep only the file referenced by the draft.
+        if (mutableState.value.draft.proofPath != file.absolutePath) {
+            file.delete()
+        } else if (oldPath != null && oldPath != file.absolutePath) {
+            val old = File(oldPath)
+            if (old.parentFile == file.parentFile && old.name.startsWith("bill-proof-")) old.delete()
+        }
+    }
 
     fun save() {
         if (mutableState.value.loading || mutableState.value.saving || mutableState.value.savedBillId != null) return

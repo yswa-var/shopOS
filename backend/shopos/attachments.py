@@ -160,6 +160,9 @@ def complete(attachment_id: UUID, db: Db, user: CurrentUser, _access: CanWrite, 
     except StorageUnavailable:
         # The final key is private and immutable through the temporary signed URL.
         pass
+    else:
+        attachment.temp_deleted_at = datetime.now(timezone.utc)
+        db.commit()
     return proof_info(attachment)
 
 

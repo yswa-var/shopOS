@@ -1,4 +1,4 @@
-.PHONY: db-up db-down storage-up storage-down install migrate api test check
+.PHONY: db-up db-down storage-up storage-down install migrate api test check cleanup-proofs
 
 db-up:
 	docker compose up -d db
@@ -26,5 +26,9 @@ api:
 test:
 	uv run pytest
 
+cleanup-proofs:
+	uv run python -m shopos.proof_cleanup --limit 100
+
 check: test
+	uv run alembic check
 	cd android && ./gradlew :app:testDebugUnitTest :app:assembleDebug

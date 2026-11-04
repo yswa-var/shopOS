@@ -1,7 +1,7 @@
 {
   "project": "ShopOS",
   "schema_version": 1,
-  "status": "in_progress",
+  "status": "complete",
   "quests": {
     "Q00": "complete",
     "Q01": "complete",
@@ -11,10 +11,10 @@
     "Q05": "complete",
     "Q06": "complete",
     "Q07": "complete",
-    "Q08": "pending"
+    "Q08": "complete"
   },
   "last_verified_commit": "61b9477",
-  "next_quest": "Q08",
+  "next_quest": null,
   "blockers": [],
-  "last_update": "Q07 verified: 36 backend tests passed with one optional live storage test skipped, 5 Kotlin tests passed, Android debug build passed, and Alembic found no migration drift. Owner UI was build-checked but not exercised on device. Next: Q08 integration hardening and release handoff."
+  "last_update": "Q08 verified: 38 backend tests passed with one optional live S3 test skipped, 5 Kotlin tests and Android debug build passed, release variant built unsigned, migration 0007 matches models, and local health/readiness responded. Final report records setup, deployment, APKs, and remaining limits. All quests complete."
 }

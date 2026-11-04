@@ -69,3 +69,11 @@
 - No schema migration was needed. A device was attached during the final check, but the owner screen was not exercised interactively; the debug APK's default API URL targets the Android emulator, while the API tests ran against the disposable host database.
 - Commit: `61b9477` (Q07 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: Q08 integration hardening, release handoff, and `docs/FINAL_REPORT.md`.
+
+## Q08 — Integration hardening and release handoff
+- Scope: migration 0007 and bounded proof cleanup command with retry markers; CameraX retake local-file cleanup; CI Android SDK alignment and Alembic drift gate; locked uv Render build and database readiness health check; current local/Render setup instructions and `docs/FINAL_REPORT.md`.
+- Acceptance: full project gate passes, migration matches models, local API health and readiness respond, debug and release variants compile, and setup/deployment steps, APK locations, and remaining limits are recorded. Cleanup tests show old pending proof objects expire while ready proof objects remain.
+- Verification (2026-11-04): fresh disposable PostgreSQL 16 `uv run alembic upgrade head` and `alembic current` — `0007 (head)`; `DATABASE_URL=... UV_CACHE_DIR=... JAVA_HOME=... ANDROID_HOME=... make check` — 38 backend tests passed, 1 optional live S3 test skipped, 5 Kotlin tests passed, Alembic found no new upgrade operations, debug APK BUILD SUCCESSFUL; `./gradlew :app:assembleRelease` — BUILD SUCCESSFUL with unsigned APK; `uv sync --locked --no-dev --dry-run` — production lock resolved; `docker compose config --quiet` and Ruby YAML parse of Render/CI files — passed; live `curl -fsS` to `/health` and `/ready` — both 200; focused proof cleanup/upload tests — 6 passed; cleanup CLI `--help` — exit 0; `git diff --check` — clean.
+- Docker was stopped, so Q04's optional live S3 test was not repeated. A connected device had an existing ShopOS installation, which was preserved; no interactive Android flow was run. Render deployment and release signing require external credentials and are described in the final report.
+- Commit: pending Q08 implementation commit; this record will be finalized immediately afterward.
+- Next: release signing, hosted deployment, and interactive device acceptance outside the quest sequence.

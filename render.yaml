@@ -10,10 +10,10 @@ services:
     name: shopos-api
     runtime: python
     plan: 0.5c-512mb
-    buildCommand: pip install .
-    preDeployCommand: alembic upgrade head
-    startCommand: uvicorn shopos.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
+    buildCommand: uv sync --locked --no-dev
+    preDeployCommand: uv run --no-sync alembic upgrade head
+    startCommand: uv run --no-sync uvicorn shopos.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /ready
     envVars:
       - key: DATABASE_URL
         fromDatabase:
