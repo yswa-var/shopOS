@@ -13,8 +13,8 @@
     "Q07": "complete",
     "Q08": "complete"
   },
-  "last_verified_commit": "952ec5f",
+  "last_verified_commit": "a43426e",
   "next_quest": null,
   "blockers": [],
-  "last_update": "Q08 verified: 38 backend tests passed with one optional live S3 test skipped, 5 Kotlin tests and Android debug build passed, release variant built unsigned, migration 0007 matches models, and local health/readiness responded. Final report records setup, deployment, APKs, and remaining limits. All quests complete."
+  "last_update": "All quests complete. Local setup correction moved ShopOS Compose PostgreSQL to host port 5433 to avoid Homebrew PostgreSQL on 5432. Migration, private storage, live signed upload, health/readiness, and full make check passed against the local Compose stack. Owner bootstrap remains for the operator."
 }

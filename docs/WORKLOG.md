@@ -77,3 +77,9 @@
 - Docker was stopped, so Q04's optional live S3 test was not repeated. A connected device had an existing ShopOS installation, which was preserved; no interactive Android flow was run. Render deployment and release signing require external credentials and are described in the final report.
 - Commit: `952ec5f` (Q08 implementation, docs, and progress); this record was finalized immediately afterward.
 - Next: release signing, hosted deployment, and interactive device acceptance outside the quest sequence.
+
+## Local setup correction after Q08
+- A live local migration initially reached Homebrew PostgreSQL on host port 5432 and failed because that server has no `shopos` role. The ShopOS Compose database was not running. Changed the Compose host port to configurable `SHOPOS_DB_HOST_PORT` (default 5433), updated `.env.example` and setup guidance, and changed the database port in the ignored local `.env`. Its example S3 secret was replaced with a generated private local secret.
+- Verification (2026-11-04): `make db-up` — healthy PostgreSQL container on `127.0.0.1:5433`; reloaded `.env` then `make migrate` — success; `make storage-up` — private bucket ready; live `/health` and `/ready` — both 200; optional signed storage test — 1 passed; `make check` against the local Compose database — 38 backend tests passed, 1 optional live test skipped in the standard run, 5 Kotlin tests and Android build passed, Alembic found no new operations; `git diff --check` — clean.
+- No real business data was changed. The Homebrew PostgreSQL server on 5432 was left alone. The local database has no user accounts; the operator must run the one-time owner bootstrap.
+- Port/config commit: `a43426e`; this verification record was finalized immediately afterward.

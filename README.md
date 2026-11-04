@@ -8,6 +8,8 @@ Requirements: Python 3.12+, `uv`, Docker with Compose, Android Studio or Android
 
 The Compose database listens on host port **5433** by default, leaving port 5432 available to a local PostgreSQL installation. If you already have a `.env` copied from an earlier version, set its `DATABASE_URL` port to `5433` and add `SHOPOS_DB_HOST_PORT=5433` before starting the database container.
 
+If migration reports `role "shopos" does not exist`, it has likely reached a different PostgreSQL server on port 5432. Run `docker compose ps` to confirm the ShopOS database is healthy on 5433, then reload the edited `.env` with `set -a; . ./.env; set +a` before retrying `make migrate`. The outer `(shopos)` virtual environment warning from uv is informational; uv uses this repository's `.venv`.
+
 ```sh
 cp .env.example .env
 # Replace S3_SECRET_ACCESS_KEY in the ignored .env file.
