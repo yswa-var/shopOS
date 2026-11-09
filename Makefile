@@ -1,4 +1,4 @@
-.PHONY: db-up db-down storage-up storage-down install migrate api test check cleanup-proofs
+.PHONY: db-up db-down storage-up storage-down install migrate bootstrap-owner api test check cleanup-proofs
 
 db-up:
 	docker compose up -d db
@@ -19,6 +19,9 @@ install:
 
 migrate:
 	uv run alembic upgrade head
+
+bootstrap-owner:
+	uv run --env-file .env python -m shopos.bootstrap --username owner --display-name "Shop Owner"
 
 api:
 	uv run uvicorn shopos.main:app --host 0.0.0.0 --port 8000 --reload

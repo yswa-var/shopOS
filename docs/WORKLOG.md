@@ -83,3 +83,8 @@
 - Verification (2026-11-04): `make db-up` — healthy PostgreSQL container on `127.0.0.1:5433`; reloaded `.env` then `make migrate` — success; `make storage-up` — private bucket ready; live `/health` and `/ready` — both 200; optional signed storage test — 1 passed; `make check` against the local Compose database — 38 backend tests passed, 1 optional live test skipped in the standard run, 5 Kotlin tests and Android build passed, Alembic found no new operations; `git diff --check` — clean.
 - No real business data was changed. The Homebrew PostgreSQL server on 5432 was left alone. The local database has no user accounts; the operator must run the one-time owner bootstrap.
 - Port/config commit: `a43426e`; this verification record was finalized immediately afterward.
+
+## Owner bootstrap setup correction
+- The direct bootstrap command in the local README depended on environment variables exported in the same shell. When run without `DATABASE_URL`, it prompted for a password and then failed before saving a user. Added `make bootstrap-owner`, which loads ignored `.env` through `uv --env-file`, and updated the README to use it.
+- Verification (2026-11-09): `make -n bootstrap-owner` showed the intended command; `UV_CACHE_DIR=/private/tmp/shopos-uv-cache uv run --env-file .env python -m shopos.bootstrap --help` succeeded; `make db-up` started the Compose database; `uv run --env-file .env alembic upgrade head` connected and succeeded; a read-only user count returned zero; `git diff --check` passed. The uv outer virtual environment warning is informational.
+- The operator must run `make bootstrap-owner` interactively and choose a private 12–256 character password. No password or owner account was created during verification.

@@ -18,11 +18,11 @@ make install
 set -a; . ./.env; set +a
 make migrate
 make storage-up
-uv run python -m shopos.bootstrap --username owner --display-name "Shop Owner"
+make bootstrap-owner
 make api
 ```
 
-Bootstrap prompts for the owner password and works only before the first user exists. `/health` checks the API process; `/ready` checks PostgreSQL. `make storage-up` writes an ignored local S3 identity file, starts SeaweedFS, and creates the private bucket. `make storage-down` and `make db-down` stop the services without deleting their volumes. Use synthetic data for tests.
+`make bootstrap-owner` loads `.env` directly and prompts for a new private password of 12–256 characters. The password from a failed bootstrap was never saved; choose it yourself and keep it private. Bootstrap works only before the first user exists. The equivalent direct command is `uv run --env-file .env python -m shopos.bootstrap --username owner --display-name "Shop Owner"`. `/health` checks the API process; `/ready` checks PostgreSQL. `make storage-up` writes an ignored local S3 identity file, starts SeaweedFS, and creates the private bucket. `make storage-down` and `make db-down` stop the services without deleting their volumes. Use synthetic data for tests.
 
 Run `make check` after exporting `DATABASE_URL`, `JAVA_HOME`, and `ANDROID_HOME`. This runs PostgreSQL-backed pytest tests, Alembic drift detection, Kotlin unit tests, and the Android debug build. For an optional live signed storage check, follow [proof-attachments.md](docs/proof-attachments.md). Expired pending uploads and leftover temporary objects can be cleaned in bounded batches with `make cleanup-proofs` (or the equivalent Python module command); schedule this command in production after choosing an operating cadence. Pending uploads older than seven days are eligible by default; saved proof objects are retained.
 
