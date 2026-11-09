@@ -1,7 +1,37 @@
+import java.net.URI
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
+}
+
+// The URL is public app configuration, not a secret. Read only this key from the
+// repository's ignored .env so Android Studio builds use the same local setting.
+val localApiUrl = providers.fileContents(rootProject.layout.projectDirectory.file("../.env"))
+    .asText.orNull
+    ?.lineSequence()
+    ?.map { it.trim() }
+    ?.firstOrNull { it.startsWith("SHOPOS_API_BASE_URL=") }
+    ?.substringAfter('=')
+    ?.trim()
+    ?.removeSurrounding("\"")
+    ?.removeSurrounding("'")
+    ?.takeIf { it.isNotBlank() }
+
+fun apiBaseUrl(defaultUrl: String, requireHttps: Boolean): String {
+    val configured = providers.gradleProperty("shoposApiBaseUrl").orNull
+        ?: providers.environmentVariable("SHOPOS_API_BASE_URL").orNull
+        ?: localApiUrl
+        ?: defaultUrl
+    val uri = URI(configured.trim())
+    require(uri.scheme in listOf("http", "https") && !uri.host.isNullOrBlank() && uri.rawQuery == null && uri.rawFragment == null) {
+        "SHOPOS_API_BASE_URL must be an http(s) URL without a query or fragment"
+    }
+    // Android configures both variants even when only debug is being built.
+    // Keep a local HTTP debug URL out of the release variant.
+    if (requireHttps && uri.scheme != "https") return defaultUrl
+    return uri.toASCIIString().trimEnd('/') + "/"
 }
 
 android {
@@ -22,11 +52,11 @@ android {
     }
     buildTypes {
         getByName("debug") {
-            val apiUrl = providers.gradleProperty("shoposApiBaseUrl").orElse("http://10.0.2.2:8000/").get()
+            val apiUrl = apiBaseUrl("http://10.0.2.2:8000/", requireHttps = false)
             buildConfigField("String", "API_BASE_URL", "\"$apiUrl\"")
         }
         getByName("release") {
-            val apiUrl = providers.gradleProperty("shoposApiBaseUrl").orElse("https://example.invalid/").get()
+            val apiUrl = apiBaseUrl("https://example.invalid/", requireHttps = true)
             buildConfigField("String", "API_BASE_URL", "\"$apiUrl\"")
         }
     }

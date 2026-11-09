@@ -27,7 +27,9 @@ Run `make check` after exporting `DATABASE_URL`, `JAVA_HOME`, and `ANDROID_HOME`
 
 ## Android testing
 
-Open `android/` in Android Studio or run `cd android && ./gradlew :app:assembleDebug`. The debug APK is at `android/app/build/outputs/apk/debug/app-debug.apk`. Its default API base URL is `http://10.0.2.2:8000/` for the Android emulator, and `.env.example` uses `http://10.0.2.2:9000` for signed photo URLs. The release build requires an HTTPS API URL and a signing configuration supplied outside the repository.
+Open `android/` in Android Studio or run `cd android && ./gradlew :app:assembleDebug`. The debug APK is at `android/app/build/outputs/apk/debug/app-debug.apk`. Android Gradle builds read `SHOPOS_API_BASE_URL` from the ignored repository `.env`; set it to your HTTPS zrok API URL, then rebuild and reinstall the APK. Later, replace that line with your Render API URL and rebuild. A trailing slash is added automatically. An explicit `-PshoposApiBaseUrl=...` build argument takes precedence over the environment variable and `.env`. Without a value, debug builds default to `http://10.0.2.2:8000/` for the emulator. The release build requires an HTTPS API URL and a signing configuration supplied outside the repository.
+
+Photo upload and viewing use signed storage URLs returned by the API, not `SHOPOS_API_BASE_URL`. The Android device must also reach `S3_PUBLIC_ENDPOINT_URL`; the example's `http://10.0.2.2:9000` works only in the emulator. For a phone reached through zrok, provide a separate reachable HTTPS endpoint for the local S3 service and set `S3_PUBLIC_ENDPOINT_URL` to it before starting `make api`. Keep the bucket private. With Render, use a reachable HTTPS S3 endpoint for the same setting in the service environment. The API and storage endpoints may be on different hosts.
 
 For a physical device connected with ADB, use port forwarding rather than exposing local services on the network:
 
@@ -36,7 +38,7 @@ adb reverse tcp:8000 tcp:8000
 adb reverse tcp:9000 tcp:9000
 ```
 
-Set `S3_PUBLIC_ENDPOINT_URL=http://127.0.0.1:9000` for that local API process, then build the debug APK with `-PshoposApiBaseUrl=http://127.0.0.1:8000/`. Keep the device connected while testing. Before installing, check whether ShopOS is already present so an existing local draft is not overwritten. The release build should use HTTPS endpoints reachable by the device for both API and object storage.
+Set `S3_PUBLIC_ENDPOINT_URL=http://127.0.0.1:9000` for that local API process, then set `SHOPOS_API_BASE_URL=http://127.0.0.1:8000/` in `.env` or build the debug APK with `-PshoposApiBaseUrl=http://127.0.0.1:8000/`. Keep the device connected while testing. Before installing, check whether ShopOS is already present so an existing local draft is not overwritten. The release build should use HTTPS endpoints reachable by the device for both API and object storage.
 
 ## Deploy on Render
 
