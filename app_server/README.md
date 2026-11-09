@@ -32,4 +32,19 @@ async def vendors(database: DatabaseDependency):
     return await database.fetch_all("SELECT * FROM vendors ORDER BY id")
 ```
 
+## User access
+
+Startup creates an `api_users` table. Catalog and bill endpoints require an
+individual username and password over HTTPS. Create and disable accounts with:
+
+```bash
+uv run python manage_users.py add alice
+uv run python manage_users.py disable alice
+```
+
+The add command prompts for a password and stores only its Argon2 hash. To
+manage users in Render PostgreSQL from your Mac, configure the external database
+host in your local `.env`. The Render API service uses the internal host.
+`/health` remains public.
+
 

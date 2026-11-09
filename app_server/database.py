@@ -177,4 +177,11 @@ class DatabaseBootstrap:
         """Ensure the database and its purchase-bill schema are ready."""
         database_created = self.ensure_database()
         schema_created = self.ensure_schema()
+        self.ensure_auth_schema()
         return BootstrapResult(database_created, schema_created)
+
+    def ensure_auth_schema(self) -> None:
+        migration = PROJECT_ROOT / "dbops" / "003_create_api_users.sql"
+        with self._connect(**self._connection_kwargs(self.settings.name)) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(migration.read_text(encoding="utf-8"))

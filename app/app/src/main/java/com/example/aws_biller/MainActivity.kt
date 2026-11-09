@@ -46,6 +46,11 @@ private fun BillCreatorScreen(repository: BillRepository = remember { BillReposi
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val dismissKeyboard = { focusManager.clearFocus(); keyboardController?.hide() }
+    var signedIn by remember { mutableStateOf(false) }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var signingIn by remember { mutableStateOf(false) }
+    var signInError by remember { mutableStateOf<String?>(null) }
     var vendors by remember { mutableStateOf(emptyList<VendorDto>()) }
     var catalog by remember { mutableStateOf(emptyList<ItemDto>()) }
     var selectedVendor by remember { mutableStateOf<VendorDto?>(null) }
@@ -64,7 +69,8 @@ private fun BillCreatorScreen(repository: BillRepository = remember { BillReposi
     var vendorDialog by remember { mutableStateOf(false) }
     var itemDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(signedIn) {
+        if (!signedIn) return@LaunchedEffect
         runCatching { repository.refreshCatalogs() }
             .onSuccess { vendors = repository.vendors; catalog = repository.items }
             .onFailure { error = "Could not load API catalogs. Check connection and try again." }
@@ -75,6 +81,28 @@ private fun BillCreatorScreen(repository: BillRepository = remember { BillReposi
         acc + (line.quantity.toDecimal() * line.price.toDecimal())
     }
     val grandTotal = subtotal + charges.toDecimal() + tax.toDecimal()
+
+    if (!signedIn) {
+        Column(Modifier.fillMaxSize().imePadding().padding(24.dp), verticalArrangement = Arrangement.Center) {
+            Text("ShopOS sign in", style = MaterialTheme.typography.headlineMedium)
+            Spacer(Modifier.height(16.dp))
+            OutlinedTextField(username, { username = it }, Modifier.fillMaxWidth(), label = { Text("Username") }, singleLine = true)
+            OutlinedTextField(password, { password = it }, Modifier.fillMaxWidth(), label = { Text("Password") }, singleLine = true, visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { dismissKeyboard() }))
+            signInError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            Button(enabled = !signingIn && username.isNotBlank() && password.isNotBlank(), onClick = {
+                dismissKeyboard()
+                signingIn = true
+                signInError = null
+                scope.launch {
+                    runCatching { repository.signIn(username.trim(), password) }
+                        .onSuccess { password = ""; signedIn = true }
+                        .onFailure { signInError = "Sign in failed. Check your credentials and connection." }
+                    signingIn = false
+                }
+            }, modifier = Modifier.fillMaxWidth()) { Text(if (signingIn) "Signing in…" else "Sign in") }
+        }
+        return
+    }
 
     Scaffold(
         bottomBar = {

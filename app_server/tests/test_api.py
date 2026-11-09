@@ -7,11 +7,13 @@ import pytest
 from db import Database
 from main import app
 from repositories import BillRepository, CatalogRepository, RecordNotFoundError
+from auth import require_user
 from routes import get_bills, get_catalog, get_database
 
 
 @pytest.fixture(autouse=True)
 def clear_overrides():
+    app.dependency_overrides[require_user] = lambda: "tester"
     yield
     app.dependency_overrides.clear()
 

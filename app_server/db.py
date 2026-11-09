@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, TypeVar
 
 import asyncpg
+from fastapi import Request
 
 from database import DatabaseSettings
 
@@ -59,3 +60,7 @@ class Database:
         async with self._require_pool().acquire() as connection:
             async with connection.transaction():
                 return await operation(connection)
+
+
+def get_database(request: Request) -> Database:
+    return request.app.state.database

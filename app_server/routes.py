@@ -1,9 +1,10 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 
-from db import Database
+from auth import require_user
+from db import Database, get_database
 from repositories import (
     BillRepository,
     CatalogRepository,
@@ -22,10 +23,7 @@ from schemas import (
 
 
 router = APIRouter()
-
-
-def get_database(request: Request) -> Database:
-    return request.app.state.database
+protected = APIRouter(dependencies=[Depends(require_user)])
 
 
 def get_catalog(database: Database = Depends(get_database)) -> CatalogRepository:
@@ -53,14 +51,19 @@ async def health(database: Database = Depends(get_database)) -> JSONResponse:
     return JSONResponse(content={"status": "ok"})
 
 
-@router.get("/vendors", response_model=list[VendorResponse])
+@protected.get("/auth/me")
+async def current_user(username: str = Depends(require_user)) -> dict[str, str]:
+    return {"username": username}
+
+
+@protected.get("/vendors", response_model=list[VendorResponse])
 async def list_vendors(
     catalog: CatalogRepository = Depends(get_catalog),
 ) -> list[dict[str, Any]]:
     return await catalog.list_vendors()
 
 
-@router.post(
+@protected.post(
     "/vendors", response_model=VendorResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_vendor(
@@ -70,14 +73,14 @@ async def create_vendor(
     return await catalog.create_vendor(payload)
 
 
-@router.get("/items", response_model=list[ItemResponse])
+@protected.get("/items", response_model=list[ItemResponse])
 async def list_items(
     catalog: CatalogRepository = Depends(get_catalog),
 ) -> list[dict[str, Any]]:
     return await catalog.list_items()
 
 
-@router.post(
+@protected.post(
     "/items", response_model=ItemResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_item(
@@ -87,7 +90,7 @@ async def create_item(
     return await catalog.create_item(payload)
 
 
-@router.post(
+@protected.post(
     "/bills", response_model=BillResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_bill(
@@ -102,7 +105,7 @@ async def create_bill(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
-@router.get("/bills/{bill_id}", response_model=BillDetail)
+@protected.get("/bills/{bill_id}", response_model=BillDetail)
 async def get_bill(
     bill_id: int,
     bills: BillRepository = Depends(get_bills),

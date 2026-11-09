@@ -7,7 +7,7 @@ from fastapi import FastAPI
 
 from database import DatabaseBootstrap, DatabaseSettings
 from db import Database
-from routes import router
+from routes import protected, router
 
 
 @asynccontextmanager
@@ -25,6 +25,7 @@ async def lifespan(application: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="ShopOS API", version="0.1.0", lifespan=lifespan)
 app.include_router(router)
+app.include_router(protected)
 
 def main() -> None:
     uvicorn.run(
