@@ -13,8 +13,8 @@
     "Q07": "complete",
     "Q08": "complete"
   },
-  "last_verified_commit": "c741d2f",
+  "last_verified_commit": "594e50c",
   "next_quest": null,
   "blockers": [],
-  "last_update": "All quests complete. Local owner setup now has a make bootstrap-owner target that loads ignored .env directly. On 2026-11-09 the Compose database started, Alembic connected successfully, and the local database had zero users. The operator can create the first owner with a private password."
+  "last_update": "All quests complete. Local Make targets for migration, owner bootstrap, API, storage, and proof cleanup now load ignored .env directly. On 2026-11-09 make migrate succeeded with DATABASE_URL absent from the shell. The operator can create the first owner with a private password."
 }

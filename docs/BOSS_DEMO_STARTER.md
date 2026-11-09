@@ -39,6 +39,6 @@ V1 covers purchase bills only. Sales, inventory balances, accounting, OCR, analy
 
 ## Demo setup reminder
 
-From the project directory, start Docker, then run `make db-up`, `make storage-up`, and `make migrate` after loading `.env` as described in the README. Run `make bootstrap-owner` once to create the first owner with a private password, then `make api`. For an Android emulator, the debug build points to the host API at `10.0.2.2:8000`. Use the debug APK at `android/app/build/outputs/apk/debug/app-debug.apk`.
+From the project directory, start Docker, create `.env` as described in the README, then run `make db-up`, `make migrate`, and `make storage-up`. Run `make bootstrap-owner` once to create the first owner with a private password, then `make api`. These Make targets load `.env` directly. For an Android emulator, the debug build points to the host API at `10.0.2.2:8000`. Use the debug APK at `android/app/build/outputs/apk/debug/app-debug.apk`.
 
 **Suggested outcome:** Agree on a short staff trial using synthetic bills first, record time to enter and retrieve a bill, and collect changes before production deployment.

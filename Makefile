@@ -18,19 +18,19 @@ install:
 	uv sync --extra test
 
 migrate:
-	uv run alembic upgrade head
+	uv run --env-file .env alembic upgrade head
 
 bootstrap-owner:
 	uv run --env-file .env python -m shopos.bootstrap --username owner --display-name "Shop Owner"
 
 api:
-	uv run uvicorn shopos.main:app --host 0.0.0.0 --port 8000 --reload
+	uv run --env-file .env uvicorn shopos.main:app --host 0.0.0.0 --port 8000 --reload
 
 test:
 	uv run pytest
 
 cleanup-proofs:
-	uv run python -m shopos.proof_cleanup --limit 100
+	uv run --env-file .env python -m shopos.proof_cleanup --limit 100
 
 check: test
 	uv run alembic check

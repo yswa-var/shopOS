@@ -88,3 +88,7 @@
 - The direct bootstrap command in the local README depended on environment variables exported in the same shell. When run without `DATABASE_URL`, it prompted for a password and then failed before saving a user. Added `make bootstrap-owner`, which loads ignored `.env` through `uv --env-file`, and updated the README to use it.
 - Verification (2026-11-09): `make -n bootstrap-owner` showed the intended command; `UV_CACHE_DIR=/private/tmp/shopos-uv-cache uv run --env-file .env python -m shopos.bootstrap --help` succeeded; `make db-up` started the Compose database; `uv run --env-file .env alembic upgrade head` connected and succeeded; a read-only user count returned zero; `git diff --check` passed. The uv outer virtual environment warning is informational.
 - The operator must run `make bootstrap-owner` interactively and choose a private 12–256 character password. No password or owner account was created during verification.
+
+## Local environment loading correction
+- `make migrate` and `make api` still depended on shell-exported variables even though the setup used an ignored `.env`. Updated those targets and `cleanup-proofs` to use `uv run --env-file .env`, matching `bootstrap-owner` and `storage-up`. Updated the README and demo setup note.
+- Verification (2026-11-09): with `DATABASE_URL` removed from the shell, `make migrate` connected to the local PostgreSQL database and exited successfully; `make -n migrate` and `make -n api` showed the `.env` option; `git diff --check` passed. No database schema or business data was changed.
