@@ -48,3 +48,7 @@ Build a release artifact with an HTTPS API URL and a private signing configurati
 The existing S3-compatible proof path now accepts `R2_BUCKET`, `R2_ENDPOINT`, `R2_REGION`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY`. R2 uses its HTTPS S3 API endpoint for signed Android PUT/GET URLs and backend copy/cleanup. Local SeaweedFS remains available through `S3_*` when `R2_BUCKET` is unset. No schema or Android change was needed. Render Blueprint prompts now use R2 variables. The local backend must be restarted after setting them; a hosted Render rollout was not performed.
 
 Verification: 39 backend tests passed with one optional live test skipped in the standard run; a separate synthetic live upload, copy, signed download, and unsigned-access denial against the configured R2 bucket passed, with its test objects removed. `alembic check` reported no new upgrade operations. The product owner subsequently reported that R2 and the full app flow work on the phone.
+
+## Proof photo compression follow-up (2026-11-09)
+
+New Android proof captures are saved at JPEG quality 50 before draft persistence and R2 upload, with a maximum 3000-pixel edge and preserved EXIF orientation. Existing draft photos are unchanged unless retaken. The debug APK and Android unit tests built successfully; compressed capture still needs a phone check for visual readability.

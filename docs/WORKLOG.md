@@ -105,3 +105,8 @@
 ## Phone acceptance report
 - On 2026-11-09, the product owner reported that Cloudflare R2 proof upload and the app's full flow work on the phone. This closes the immediate phone proof-upload follow-up. The report was not independently observed by this agent; Room process recovery and owner screen interactions were not specified separately.
 - Next: configure the same private R2 variables on Render when deploying. Release signing and an operating schedule for proof cleanup remain deployment tasks.
+
+## Proof photo compression follow-up
+- Scope: recompress new CameraX proof captures to JPEG quality 50 before draft persistence or R2 upload; sample oversized images to at most a 3000-pixel edge, keep EXIF orientation, and remove temporary files on success or failure. The API contract and existing draft photos remain unchanged.
+- Verification (2026-11-09): `JAVA_HOME=... ./gradlew :app:testDebugUnitTest :app:assembleDebug` — BUILD SUCCESSFUL; `git diff --check` — clean. No device capture was performed in this run, so visual readability remains for a phone check. Quality 50 is an encoder setting, not a fixed file-size reduction.
+- Next: install the new debug APK and inspect a newly captured bill proof on the phone; then proceed with Render and release setup as needed.

@@ -15,6 +15,8 @@ Retry initiation with the same `client_upload_id` and identical metadata to rece
 
 The current check recognizes JPEG, PNG, and WebP signatures and does not fully decode the image. Q05 added CameraX capture, local draft recovery, and the bill transaction. Q06 added linked-bill proof access. Q08 added a bounded cleanup command: `uv run python -m shopos.proof_cleanup --limit 100`. It deletes pending uploads older than seven days, removes their temporary and unlinked final objects, and retries failed temporary-object deletion for ready proofs. Ready proof objects are retained. Schedule the command in production; it is not run by the API process.
 
+New Android camera captures are recompressed as JPEG at encoder quality 50 before they enter the local draft and upload path. Images larger than 3000 pixels on an edge are sampled down, and their EXIF orientation is preserved. The quality setting does not promise a 50% reduction in byte size. Existing drafts retain their already captured photo until retaken.
+
 ## Local storage
 
 Copy `.env.example` to ignored `.env`, replace `S3_SECRET_ACCESS_KEY`, and run `make install` then `make storage-up`. This writes an ignored `.local/seaweedfs-s3.json`, starts the loopback-bound SeaweedFS S3 service on port 9000, and creates a private bucket. The Android emulator uses `S3_PUBLIC_ENDPOINT_URL=http://10.0.2.2:9000`; for a host-side integration check, set it to `http://127.0.0.1:9000`. A physical device needs a reachable HTTPS S3 endpoint or a secured local network setup. Use `make storage-down` to stop the service without deleting its volume.

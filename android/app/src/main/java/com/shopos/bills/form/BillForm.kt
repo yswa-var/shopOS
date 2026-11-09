@@ -51,6 +51,11 @@ import com.shopos.bills.catalog.CatalogKind
 import com.shopos.bills.catalog.CatalogPicker
 import com.shopos.bills.catalog.CatalogRepository
 import java.io.File
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun BillForm(controller: BillFormController, catalog: CatalogRepository, canCreateCatalog: Boolean) {
@@ -292,7 +297,9 @@ private fun FormText(field: BillFieldSpec, value: String, onChange: (String) -> 
 private fun ProofCapture(path: String?, onPhoto: (File) -> Unit) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
     var open by remember { mutableStateOf(false) }
+    var processing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) open = true else error = "Camera permission is required for proof photo"
@@ -354,25 +361,41 @@ private fun ProofCapture(path: String?, onPhoto: (File) -> Unit) {
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { open = false }) { Text("Cancel") }
+                    TextButton(onClick = { open = false }, enabled = !processing) { Text("Cancel") }
                     Button(onClick = {
+                        processing = true
                         val file = File.createTempFile("bill-proof-", ".jpg", context.filesDir)
                         camera.takePicture(
                             ImageCapture.OutputFileOptions.Builder(file).build(),
                             ContextCompat.getMainExecutor(context),
                             object : ImageCapture.OnImageSavedCallback {
                                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                                    onPhoto(file)
-                                    open = false
+                                    scope.launch {
+                                        var compressed: File? = null
+                                        try {
+                                            compressed = withContext(Dispatchers.IO) { compressProofPhoto(file) }
+                                            onPhoto(compressed)
+                                            compressed = null
+                                            open = false
+                                        } catch (failure: Exception) {
+                                            if (failure is CancellationException) throw failure
+                                            error = failure.message ?: "Could not compress proof photo"
+                                        } finally {
+                                            file.delete()
+                                            compressed?.delete()
+                                            processing = false
+                                        }
+                                    }
                                 }
                                 override fun onError(exception: ImageCaptureException) {
                                     file.delete()
                                     error = exception.message
+                                    processing = false
                                 }
                             }
                         )
-                    }) {
-                        Text("Capture Photo")
+                    }, enabled = !processing) {
+                        Text(if (processing) "Processing photo…" else "Capture Photo")
                     }
                 }
             }
