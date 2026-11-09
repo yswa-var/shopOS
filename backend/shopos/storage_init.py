@@ -7,7 +7,7 @@ from pathlib import Path
 
 from botocore.exceptions import BotoCoreError, ClientError
 
-from shopos.storage import make_storage
+from shopos.storage import S3Storage
 
 CONFIG_PATH = Path(__file__).resolve().parents[2] / ".local" / "seaweedfs-s3.json"
 
@@ -25,9 +25,14 @@ def write_local_config() -> None:
 
 
 def create_bucket() -> None:
-    storage = make_storage()
     if not os.getenv("S3_ENDPOINT_URL"):
         raise RuntimeError("Local bucket setup requires S3_ENDPOINT_URL")
+    # This command only prepares SeaweedFS, even when the API is set to R2.
+    storage = S3Storage(
+        bucket=os.environ["S3_BUCKET"], region=os.getenv("S3_REGION", "us-east-1"),
+        endpoint=os.environ["S3_ENDPOINT_URL"], public_endpoint=os.getenv("S3_PUBLIC_ENDPOINT_URL"),
+        access_key=os.environ["S3_ACCESS_KEY_ID"], secret_key=os.environ["S3_SECRET_ACCESS_KEY"],
+    )
     for attempt in range(30):
         try:
             storage.internal.head_bucket(Bucket=storage.bucket)

@@ -19,13 +19,13 @@ services:
         fromDatabase:
           name: shopos-db
           property: connectionString
-      - key: S3_BUCKET
+      - key: R2_BUCKET
         sync: false
-      - key: S3_REGION
+      - key: R2_REGION
         sync: false
-      - key: S3_ENDPOINT_URL
+      - key: R2_ENDPOINT
         sync: false
-      - key: S3_ACCESS_KEY_ID
+      - key: R2_ACCESS_KEY_ID
         sync: false
-      - key: S3_SECRET_ACCESS_KEY
+      - key: R2_SECRET_ACCESS_KEY
         sync: false

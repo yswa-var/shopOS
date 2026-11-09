@@ -7,7 +7,7 @@ from conftest import auth_headers, seed_owner_and_employee
 from shopos.main import app
 from shopos.models import AuditEvent, ProofAttachment, User, UserPermission
 from shopos.security import hash_password
-from shopos.storage import ObjectHead, S3Storage, StorageUnavailable, get_storage
+from shopos.storage import ObjectHead, S3Storage, StorageUnavailable, get_storage, make_storage
 
 JPEG = b"\xff\xd8\xff" + b"j" * 13
 
@@ -170,3 +170,21 @@ def test_s3_urls_are_short_lived_and_signed():
     assert "content-type" in upload.lower()
     assert "X-Amz-Expires=300" in download
     assert "X-Amz-Signature=" in download
+
+
+def test_r2_config_uses_existing_signed_upload_path(monkeypatch):
+    monkeypatch.setenv("R2_BUCKET", "shopos-parchi")
+    monkeypatch.setenv("R2_ENDPOINT", "https://account.r2.cloudflarestorage.com")
+    monkeypatch.setenv("R2_REGION", "auto")
+    monkeypatch.setenv("R2_ACCESS_KEY_ID", "test-key")
+    monkeypatch.setenv("R2_SECRET_ACCESS_KEY", "test-secret")
+    make_storage.cache_clear()
+    try:
+        storage = make_storage()
+        url = storage.upload_url("pending/synthetic", "image/jpeg")
+        assert url.startswith("https://account.r2.cloudflarestorage.com/shopos-parchi/pending/synthetic?")
+        assert "X-Amz-Expires=300" in url
+        assert "X-Amz-Signature=" in url
+        assert "content-type" in url.lower()
+    finally:
+        make_storage.cache_clear()

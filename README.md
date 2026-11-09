@@ -21,6 +21,8 @@ make bootstrap-owner
 make api
 ```
 
+When using R2, skip `make storage-up`; the R2 bucket is already managed in Cloudflare.
+
 `make bootstrap-owner` loads `.env` directly and prompts for a new private password of 12–256 characters. The password from a failed bootstrap was never saved; choose it yourself and keep it private. Bootstrap works only before the first user exists. The equivalent direct command is `uv run --env-file .env python -m shopos.bootstrap --username owner --display-name "Shop Owner"`. `/health` checks the API process; `/ready` checks PostgreSQL. `make storage-up` writes an ignored local S3 identity file, starts SeaweedFS, and creates the private bucket. `make storage-down` and `make db-down` stop the services without deleting their volumes. Use synthetic data for tests.
 
 Run `make check` after exporting `DATABASE_URL`, `JAVA_HOME`, and `ANDROID_HOME`. This runs PostgreSQL-backed pytest tests, Alembic drift detection, Kotlin unit tests, and the Android debug build. For an optional live signed storage check, follow [proof-attachments.md](docs/proof-attachments.md). Expired pending uploads and leftover temporary objects can be cleaned in bounded batches with `make cleanup-proofs` (or the equivalent Python module command); schedule this command in production after choosing an operating cadence. Pending uploads older than seven days are eligible by default; saved proof objects are retained.
@@ -29,7 +31,7 @@ Run `make check` after exporting `DATABASE_URL`, `JAVA_HOME`, and `ANDROID_HOME`
 
 Open `android/` in Android Studio or run `cd android && ./gradlew :app:assembleDebug`. The debug APK is at `android/app/build/outputs/apk/debug/app-debug.apk`. Android Gradle builds read `SHOPOS_API_BASE_URL` from the ignored repository `.env`; set it to your HTTPS zrok API URL, then rebuild and reinstall the APK. Later, replace that line with your Render API URL and rebuild. A trailing slash is added automatically. An explicit `-PshoposApiBaseUrl=...` build argument takes precedence over the environment variable and `.env`. Without a value, debug builds default to `http://10.0.2.2:8000/` for the emulator. The release build requires an HTTPS API URL and a signing configuration supplied outside the repository.
 
-Photo upload and viewing use signed storage URLs returned by the API, not `SHOPOS_API_BASE_URL`. The Android device must also reach `S3_PUBLIC_ENDPOINT_URL`; the example's `http://10.0.2.2:9000` works only in the emulator. For a phone reached through zrok, provide a separate reachable HTTPS endpoint for the local S3 service and set `S3_PUBLIC_ENDPOINT_URL` to it before starting `make api`. Keep the bucket private. With Render, use a reachable HTTPS S3 endpoint for the same setting in the service environment. The API and storage endpoints may be on different hosts.
+Photo upload and viewing use signed storage URLs returned by the API, not `SHOPOS_API_BASE_URL`. For a phone, add `R2_BUCKET`, `R2_ENDPOINT`, `R2_REGION=auto`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY` to the ignored `.env`, then restart `make api`. Use the R2 S3 API endpoint (`https://<ACCOUNT_ID>.r2.cloudflarestorage.com`), not a public bucket domain; keep the bucket private. The phone reaches R2 directly through the signed URL, so no storage zrok tunnel or Android rebuild is needed. Without `R2_BUCKET`, local SeaweedFS continues to use `S3_PUBLIC_ENDPOINT_URL`; the example's `10.0.2.2` value works only in the emulator.
 
 For a physical device connected with ADB, use port forwarding rather than exposing local services on the network:
 
@@ -42,7 +44,7 @@ Set `S3_PUBLIC_ENDPOINT_URL=http://127.0.0.1:9000` for that local API process, t
 
 ## Deploy on Render
 
-`render.yaml` defines a paid Python web service and private PostgreSQL database. Create a Render Blueprint from this repository, review its region and cost, and supply the prompted `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT_URL`, `S3_ACCESS_KEY_ID`, and `S3_SECRET_ACCESS_KEY` values for a private S3-compatible bucket. If the bucket needs a distinct client-facing endpoint, set `S3_PUBLIC_ENDPOINT_URL` to its HTTPS URL in the service environment. For an existing Blueprint, add newly introduced `sync: false` variables in the dashboard.
+`render.yaml` defines a paid Python web service and private PostgreSQL database. Create a Render Blueprint from this repository, review its region and cost, and supply the prompted `R2_BUCKET`, `R2_REGION=auto`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY` values. For an existing Blueprint, add the R2 variables in the dashboard; R2 is selected when `R2_BUCKET` is set. Keep the bucket private and give the R2 token object read/write permissions needed for upload, copy, download, and cleanup.
 
 The Blueprint installs the locked Python dependencies with uv, runs Alembic before each deployment, starts Uvicorn, and uses `/ready` as its health check. After the first deployment, run the owner bootstrap command once in the Render service shell. Build the Android release artifact with `-PshoposApiBaseUrl=https://YOUR-API/` and your private signing setup. No credentials, customer records, production photos, or signing keys belong in Git.
 

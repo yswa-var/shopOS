@@ -13,8 +13,8 @@
     "Q07": "complete",
     "Q08": "complete"
   },
-  "last_verified_commit": "815f297",
+  "last_verified_commit": "a9bce97",
   "next_quest": null,
   "blockers": [],
-  "last_update": "All quests complete. Android builds now read SHOPOS_API_BASE_URL from ignored .env for a zrok or Render API endpoint. A zrok-style URL was verified in generated BuildConfig, and the debug APK built successfully with the local default. Signed proof storage still needs its own device-reachable S3_PUBLIC_ENDPOINT_URL."
+  "last_update": "All quests complete. R2 proof storage follow-up verified on 2026-11-09: 39 backend tests passed, a synthetic live signed R2 upload/download passed, and Alembic found no new migration. Restart the local API to load R2_* from ignored .env, then test a phone proof photo. Render deployment remains an operator step."
 }

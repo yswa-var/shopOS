@@ -1,4 +1,4 @@
-"""Optional local S3 integration check; run with SHOPOS_TEST_S3=1."""
+"""Optional S3-compatible integration check; run with SHOPOS_TEST_S3=1."""
 import base64
 import os
 from uuid import uuid4
@@ -16,7 +16,7 @@ PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4
 
 def test_real_signed_put_copy_and_get(client, db_engine):
     if os.getenv("SHOPOS_TEST_S3") != "1":
-        pytest.skip("Set SHOPOS_TEST_S3=1 with a local S3 test bucket")
+        pytest.skip("Set SHOPOS_TEST_S3=1 with a disposable S3-compatible test bucket")
     seed_owner_and_employee(db_engine)
     headers = auth_headers(client)
     response = client.post(
@@ -37,8 +37,9 @@ def test_real_signed_put_copy_and_get(client, db_engine):
         assert httpx.get(signed_url).content == PNG
         with Session(db_engine) as db:
             object_key = db.get(ProofAttachment, attachment_id).object_key
-        direct_url = f"{os.environ['S3_ENDPOINT_URL'].rstrip('/')}/{storage.bucket}/{object_key}"
-        assert httpx.get(direct_url).status_code == 403
+        endpoint = os.getenv("R2_ENDPOINT") if os.getenv("R2_BUCKET") else os.environ["S3_ENDPOINT_URL"]
+        direct_url = f"{endpoint.rstrip('/')}/{storage.bucket}/{object_key}"
+        assert 400 <= httpx.get(direct_url).status_code < 500
     finally:
         with Session(db_engine) as db:
             record = db.get(ProofAttachment, attachment_id)

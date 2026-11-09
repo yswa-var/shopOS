@@ -86,18 +86,24 @@ class S3Storage:
 
 @lru_cache(maxsize=1)
 def make_storage() -> S3Storage:
-    bucket = os.getenv("S3_BUCKET")
+    # R2 uses the same S3 API; keep S3_* for the local SeaweedFS workflow.
+    use_r2 = bool(os.getenv("R2_BUCKET"))
+    prefix = "R2" if use_r2 else "S3"
+    bucket = os.getenv(f"{prefix}_BUCKET")
     if not bucket:
-        raise RuntimeError("S3_BUCKET is required")
-    access_key = os.getenv("S3_ACCESS_KEY_ID") or None
-    secret_key = os.getenv("S3_SECRET_ACCESS_KEY") or None
+        raise RuntimeError(f"{prefix}_BUCKET is required")
+    access_key = os.getenv(f"{prefix}_ACCESS_KEY_ID") or None
+    secret_key = os.getenv(f"{prefix}_SECRET_ACCESS_KEY") or None
     if bool(access_key) != bool(secret_key):
-        raise RuntimeError("Both S3 access key and secret must be set together")
+        raise RuntimeError(f"Both {prefix} access key and secret must be set together")
+    endpoint = os.getenv("R2_ENDPOINT" if use_r2 else "S3_ENDPOINT_URL") or None
+    if use_r2 and (not endpoint or not access_key):
+        raise RuntimeError("R2_ENDPOINT and R2 credentials are required")
     return S3Storage(
         bucket=bucket,
-        region=os.getenv("S3_REGION", "us-east-1"),
-        endpoint=os.getenv("S3_ENDPOINT_URL") or None,
-        public_endpoint=os.getenv("S3_PUBLIC_ENDPOINT_URL") or None,
+        region=os.getenv(f"{prefix}_REGION", "auto" if use_r2 else "us-east-1"),
+        endpoint=endpoint,
+        public_endpoint=endpoint if use_r2 else os.getenv("S3_PUBLIC_ENDPOINT_URL") or None,
         access_key=access_key,
         secret_key=secret_key,
     )

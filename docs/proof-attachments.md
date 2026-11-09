@@ -19,10 +19,12 @@ The current check recognizes JPEG, PNG, and WebP signatures and does not fully d
 
 Copy `.env.example` to ignored `.env`, replace `S3_SECRET_ACCESS_KEY`, and run `make install` then `make storage-up`. This writes an ignored `.local/seaweedfs-s3.json`, starts the loopback-bound SeaweedFS S3 service on port 9000, and creates a private bucket. The Android emulator uses `S3_PUBLIC_ENDPOINT_URL=http://10.0.2.2:9000`; for a host-side integration check, set it to `http://127.0.0.1:9000`. A physical device needs a reachable HTTPS S3 endpoint or a secured local network setup. Use `make storage-down` to stop the service without deleting its volume.
 
-For a live synthetic upload/download check, set the usual database and S3 environment variables plus `SHOPOS_TEST_S3=1`, then run `uv run pytest backend/tests/test_storage_live.py`. The test uploads one tiny synthetic PNG through the signed URL, verifies the private direct URL is denied, and deletes its objects afterward.
+For a live synthetic upload/download check, set the database and either S3 or R2 storage variables plus `SHOPOS_TEST_S3=1`, then run `uv run pytest backend/tests/test_storage_live.py`. The test uploads one tiny synthetic PNG through the signed URL, verifies the private direct URL is denied, and deletes its objects afterward.
 
-## Render or another provider
+## Cloudflare R2 (phone and Render)
 
-Create a private S3-compatible bucket outside Render, then provide `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT_URL`, `S3_ACCESS_KEY_ID`, and `S3_SECRET_ACCESS_KEY` in the Render service environment. `S3_PUBLIC_ENDPOINT_URL` is optional when the same HTTPS endpoint is reachable by both API and Android clients. Use HTTPS for real devices. The application can later use an IAM credential provider by leaving both explicit key variables unset. Never make the bucket public or commit credentials.
+Set `R2_BUCKET=shopos-parchi`, `R2_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com`, `R2_REGION=auto`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY` in ignored `.env` for the local API and in Render service settings for deployment. Restart the API after changing them. `R2_BUCKET` selects R2; the local `S3_*` settings remain available when it is unset. The backend uses the R2 endpoint for both its S3 calls and signed URLs returned to Android. The bucket stays private, and the phone needs only HTTPS access to that R2 S3 API endpoint. The token needs object read/write permissions for the bucket. No database migration or Android change is required. Do not run `make storage-up` for R2; that target only initializes local SeaweedFS.
 
-[Boto3 signed URL reference](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/generate_presigned_url.html) · [Render Blueprint secret variables](https://render.com/docs/blueprint-spec)
+The existing two-step upload, private copy, authorized signed download, and cleanup paths remain the same. For an optional live test, use a disposable database and a bucket where a synthetic image may be created and removed with `SHOPOS_TEST_S3=1`.
+
+[Cloudflare R2 presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/) · [Cloudflare R2 S3 compatibility](https://developers.cloudflare.com/r2/api/s3/api/)
