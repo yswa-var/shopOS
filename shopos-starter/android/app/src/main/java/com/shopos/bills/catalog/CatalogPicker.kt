@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 
 /** Shared selector for the bill form; it only reports a selected catalog record. */
@@ -47,6 +48,7 @@ fun CatalogPicker(
     val state by picker.state.collectAsState()
     var showCreate by remember { mutableStateOf(false) }
     var showAlias by remember { mutableStateOf(false) }
+    var isFocused by remember { mutableStateOf(false) }
 
     LaunchedEffect(picker) { picker.search("") }
     LaunchedEffect(picker, selected?.id) { if (selected != null) picker.select(selected) }
@@ -63,36 +65,52 @@ fun CatalogPicker(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-                    Text(
-                        "Selected: ${state.selected?.name}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Text(
+                            "Selected: ${state.selected?.name}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    TextButton(onClick = { isFocused = true }) {
+                        Text("Change")
+                    }
                 }
             }
         }
 
         OutlinedTextField(
             value = state.query,
-            onValueChange = picker::search,
+            onValueChange = {
+                picker.search(it)
+                isFocused = true
+            },
             label = { Text("Search $label") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                    if (focusState.isFocused && state.results.isEmpty() && state.query.isBlank()) {
+                        picker.search("")
+                    }
+                },
         )
 
-        if (state.loading) {
+        if (state.loading && isFocused) {
             Text("Searching…", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        if (state.results.isNotEmpty()) {
+        // Only show results list when the search field is focused (pressed) or user is typing a query
+        if ((isFocused || state.query.isNotBlank()) && state.results.isNotEmpty()) {
             OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
-                    state.results.take(5).forEach { entry ->
+                    state.results.take(10).forEach { entry ->
                         Text(
                             text = entry.name + if (entry.aliases.isEmpty()) "" else " · ${entry.aliases.joinToString()}",
                             style = MaterialTheme.typography.bodyMedium,
@@ -101,12 +119,19 @@ fun CatalogPicker(
                                 .clickable {
                                     picker.select(entry)
                                     onSelected(entry)
+                                    isFocused = false
                                 }
                                 .padding(horizontal = 12.dp, vertical = 10.dp),
                         )
                     }
                 }
             }
+        } else if (!isFocused && state.selected == null && state.totalCount > 0) {
+            Text(
+                text = "${state.totalCount} $label available. Tap search to select.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         if (state.error != null) {
@@ -131,6 +156,7 @@ fun CatalogPicker(
             picker.create(name, aliases) {
                 picker.state.value.selected?.let(onSelected)
                 showCreate = false
+                isFocused = false
             }
         }
     }
@@ -139,6 +165,7 @@ fun CatalogPicker(
             picker.addAlias(alias) {
                 picker.state.value.selected?.let(onSelected)
                 showAlias = false
+                isFocused = false
             }
         }
     }

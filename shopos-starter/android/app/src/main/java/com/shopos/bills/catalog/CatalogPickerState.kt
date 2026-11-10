@@ -17,6 +17,7 @@ data class CatalogPickerUiState(
     val loading: Boolean = false,
     val saving: Boolean = false,
     val error: String? = null,
+    val totalCount: Int = 0,
 )
 
 class CatalogPickerState(
@@ -34,13 +35,23 @@ class CatalogPickerState(
         val local = cache.values.filter { entry ->
             query.isBlank() || (listOf(entry.name) + entry.aliases).any { it.contains(query.trim(), ignoreCase = true) }
         }.take(20)
-        mutableState.value = mutableState.value.copy(query = query, results = local, loading = true, error = null)
+        mutableState.value = mutableState.value.copy(
+            query = query,
+            results = local,
+            loading = true,
+            error = null,
+            totalCount = if (cache.isNotEmpty()) cache.size else mutableState.value.totalCount
+        )
         searchJob = scope.launch {
             try {
                 delay(200)
                 val remote = repository.search(kind, query)
                 remote.forEach { cache[it.id] = it }
-                mutableState.value = mutableState.value.copy(results = remote, loading = false)
+                mutableState.value = mutableState.value.copy(
+                    results = if (query.isBlank()) remote.take(20) else remote,
+                    loading = false,
+                    totalCount = cache.size
+                )
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
@@ -61,7 +72,13 @@ class CatalogPickerState(
             try {
                 val entry = repository.create(kind, name, aliases)
                 cache[entry.id] = entry
-                mutableState.value = mutableState.value.copy(selected = entry, query = entry.name, results = listOf(entry), saving = false)
+                mutableState.value = mutableState.value.copy(
+                    selected = entry,
+                    query = entry.name,
+                    results = listOf(entry),
+                    saving = false,
+                    totalCount = cache.size
+                )
                 onSaved()
             } catch (cancelled: CancellationException) {
                 throw cancelled
