@@ -1,0 +1,20 @@
+{
+  "project": "ShopOS",
+  "schema_version": 1,
+  "status": "complete",
+  "quests": {
+    "Q00": "complete",
+    "Q01": "complete",
+    "Q02": "complete",
+    "Q03": "complete",
+    "Q04": "complete",
+    "Q05": "complete",
+    "Q06": "complete",
+    "Q07": "complete",
+    "Q08": "complete"
+  },
+  "last_verified_commit": "0698e98",
+  "next_quest": null,
+  "blockers": [],
+  "last_update": "All quests complete. New Android camera proofs now use JPEG quality 50 before draft save and R2 upload, with a 3000-pixel maximum edge and preserved orientation. Android unit tests and debug APK build passed on 2026-11-09. Next: inspect a newly captured proof on the phone for readability; Render deployment, release signing, and proof cleanup scheduling remain operator steps."
+}

@@ -1,0 +1,37 @@
+.PHONY: db-up db-down storage-up storage-down install migrate bootstrap-owner api test check cleanup-proofs
+
+db-up:
+	docker compose up -d db
+
+db-down:
+	docker compose down
+
+storage-up:
+	uv run --env-file .env python -m shopos.storage_init config
+	docker compose up -d storage
+	uv run --env-file .env python -m shopos.storage_init bucket
+
+storage-down:
+	docker compose stop storage
+
+install:
+	uv sync --extra test
+
+migrate:
+	uv run --env-file .env alembic upgrade head
+
+bootstrap-owner:
+	uv run --env-file .env python -m shopos.bootstrap --username owner --display-name "Shop Owner"
+
+api:
+	uv run --env-file .env uvicorn shopos.main:app --host 0.0.0.0 --port 8000 --reload
+
+test:
+	uv run pytest
+
+cleanup-proofs:
+	uv run --env-file .env python -m shopos.proof_cleanup --limit 100
+
+check: test
+	uv run alembic check
+	cd android && ./gradlew :app:testDebugUnitTest :app:assembleDebug

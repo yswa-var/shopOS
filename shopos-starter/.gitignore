@@ -1,0 +1,31 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+secrets/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+*.iml
+.idea/
+.local/
+
+# Local data and generated artifacts
+.DS_Store
+*.db
+*.sqlite3
+uploads/
+*.apk
+*.aab
+coverage/
+dist/
